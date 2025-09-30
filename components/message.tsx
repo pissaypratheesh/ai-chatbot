@@ -24,6 +24,9 @@ import { MessageEditor } from "./message-editor";
 import { MessageReasoning } from "./message-reasoning";
 import { PreviewAttachment } from "./preview-attachment";
 import { Weather } from "./weather";
+import { useTextSelection } from "@/hooks/useTextSelection";
+import { QuotePopup } from "./quote-popup";
+import { useQuote } from "./providers/QuoteProvider";
 
 const PurePreviewMessage = ({
   chatId,
@@ -45,6 +48,14 @@ const PurePreviewMessage = ({
   requiresScrollPadding: boolean;
 }) => {
   const [mode, setMode] = useState<"view" | "edit">("view");
+  const { setQuotedText } = useQuote();
+  
+  const { selection, isVisible, containerRef, handleQuote } = useTextSelection({
+    onQuote: (selection) => {
+      setQuotedText(selection.text, message.id);
+    },
+    enabled: !isReadonly && message.role === "assistant",
+  });
 
   const attachmentsFromMessage = message.parts.filter(
     (part) => part.type === "file"
@@ -55,10 +66,15 @@ const PurePreviewMessage = ({
   return (
     <motion.div
       animate={{ opacity: 1 }}
-      className="group/message w-full"
+      className="group/message w-full relative"
       data-role={message.role}
       data-testid={`message-${message.role}`}
       initial={{ opacity: 0 }}
+      ref={containerRef}
+      style={{
+        // Ensure text selection works properly for assistant messages
+        userSelect: message.role === "assistant" ? "text" : "auto",
+      }}
     >
       <div
         className={cn("flex w-full items-start gap-2 md:gap-3", {
@@ -282,6 +298,14 @@ const PurePreviewMessage = ({
           )}
         </div>
       </div>
+      
+      {message.role === "assistant" && (
+        <QuotePopup
+          selection={selection!}
+          isVisible={isVisible}
+          onQuote={handleQuote}
+        />
+      )}
     </motion.div>
   );
 };

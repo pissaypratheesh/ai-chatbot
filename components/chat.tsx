@@ -32,6 +32,7 @@ import { MultimodalInput } from "./multimodal-input";
 import { getChatHistoryPaginationKey } from "./sidebar-history";
 import { toast } from "./toast";
 import type { VisibilityType } from "./visibility-selector";
+import { QuoteProvider } from "./providers/QuoteProvider";
 
 export function Chat({
   id,
@@ -155,7 +156,7 @@ export function Chat({
   });
 
   return (
-    <>
+    <QuoteProvider>
       <div className="overscroll-behavior-contain flex h-dvh min-w-0 touch-pan-y flex-col bg-background">
         <ChatHeader
           chatId={id}
@@ -244,6 +245,6 @@ export function Chat({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </QuoteProvider>
   );
 }

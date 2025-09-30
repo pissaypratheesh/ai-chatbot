@@ -3,6 +3,134 @@
 /* include utility classes in streamdown */
 @source '../node_modules/streamdown/dist/index.js';
 
+/* Custom text selection styles for quote feature */
+[data-role="assistant"] {
+  /* Ensure text selection works properly */
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Prevent context menu on selected text in assistant messages */
+[data-role="assistant"]::selection {
+  background-color: rgba(59, 130, 246, 0.2); /* Light blue selection */
+}
+
+/* Hide context menu for selected text in assistant messages */
+[data-role="assistant"]:has(::selection) {
+  -webkit-touch-callout: none;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Microsoft Edge Mini Menu Prevention */
+[data-role="assistant"] {
+  -webkit-touch-callout: none;
+}
+
+/* Hide Edge mini menu specifically */
+[data-testid="mini-menu"],
+.mini-menu,
+[class*="mini-menu"],
+[role="toolbar"],
+[class*="toolbar"] {
+  display: none !important;
+}
+
+/* Prevent Edge's selection overlay */
+[data-role="assistant"]::selection {
+  -webkit-touch-callout: none;
+}
+
+/* Disable default browser text selection popup for assistant messages */
+[data-role="assistant"] {
+  -webkit-touch-callout: none;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Allow text selection in assistant messages */
+[data-role="assistant"] {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Style our custom quote popup to be very prominent */
+[data-quote-popup] {
+  z-index: 10001 !important;
+  user-select: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+  border: 2px solid #3b82f6 !important;
+  background: white !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  font-weight: 600 !important;
+  color: #1f2937 !important;
+}
+
+/* Hide native browser selection popups - be specific to avoid affecting sidebar */
+[data-testid="mini-menu"],
+.mini-menu,
+[class*="mini-menu"]:not([data-sidebar]),
+[role="toolbar"]:not([data-sidebar]),
+[class*="toolbar"]:not([data-sidebar]),
+[class*="selection"]:not([data-sidebar]),
+[class*="popup"]:not([data-sidebar]),
+[class*="context"]:not([data-sidebar]),
+[class*="action"]:not([data-sidebar]),
+[class*="copilot"]:not([data-sidebar]),
+[class*="hide-menu"]:not([data-sidebar]),
+[class*="more-actions"]:not([data-sidebar]) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  z-index: -1 !important;
+}
+
+/* Ensure our popup is always visible */
+[data-quote-popup] {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Ensure sidebar menu items are visible */
+[data-sidebar="menu-item"],
+[data-sidebar="menu-button"],
+[data-sidebar="menu-action"] {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Fix sidebar menu button padding when action is present */
+[data-sidebar="menu-item"]:has([data-sidebar="menu-action"]) [data-sidebar="menu-button"] {
+  padding-right: 2.5rem !important; /* pr-10 equivalent */
+}
+
+/* Force padding for all sidebar menu buttons with actions */
+[data-sidebar="menu-button"] {
+  padding-right: 2.5rem !important;
+}
+
+/* Ensure menu action is properly positioned and clickable */
+[data-sidebar="menu-action"] {
+  z-index: 10 !important;
+  pointer-events: auto !important;
+  right: 0.5rem !important;
+  top: 0.375rem !important;
+}
+
 /* custom variant for setting dark mode programmatically */
 @custom-variant dark (&:is(.dark, .dark *));
 

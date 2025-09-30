@@ -4,6 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbo",
+    "dev:full": "POSTGRES_URL=\"postgresql://postgres:postgres@localhost:5432/postgres\" next dev --turbo",
+    "dev:with-db": "POSTGRES_URL=\"postgresql://postgres:postgres@localhost:5432/postgres\" next dev --turbo",
+    "dev:neon": "echo 'Using Neon database from .env.local' && next dev --turbo",
     "build": "tsx lib/db/migrate && next build",
     "start": "next start",
     "lint": "npx ultracite@latest check",
@@ -19,6 +22,7 @@
   },
   "dependencies": {
     "@ai-sdk/gateway": "^1.0.15",
+    "@ai-sdk/openai": "^2.0.39",
     "@ai-sdk/provider": "2.0.0",
     "@ai-sdk/react": "2.0.26",
     "@ai-sdk/xai": "2.0.13",

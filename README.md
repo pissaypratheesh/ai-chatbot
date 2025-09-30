@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-  <a href="https://chat-sdk.dev"><strong>Read Docs</strong></a> ·
+  <a href="./docs/"><strong>📚 Documentation</strong></a> ·
   <a href="#features"><strong>Features</strong></a> ·
   <a href="#model-providers"><strong>Model Providers</strong></a> ·
   <a href="#deploy-your-own"><strong>Deploy Your Own</strong></a> ·
@@ -68,3 +68,23 @@ pnpm dev
 ```
 
 Your app template should now be running on [localhost:3000](http://localhost:3000).
+
+## 📚 Documentation
+
+This project includes comprehensive documentation in the [`docs/`](./docs/) folder:
+
+- **[📖 Project Overview](./docs/README_custom.md)** - Complete project documentation with architecture diagrams
+- **[🔍 Search Implementation](./docs/SEARCH_IMPLEMENTATION_STATUS.md)** - Current search feature status and technical details
+- **[🏗️ Service Architecture](./docs/SEARCH_SERVICE_ARCHITECTURE.md)** - Mock/Real service switching and API integration
+- **[🗄️ Database Viewer](./docs/DATABASE_VIEWER_README.md)** - PostgreSQL integration and web-based data viewer
+- **[🚀 Deployment Guide](./docs/NEON_DEPLOYMENT_GUIDE.md)** - Production deployment with Neon PostgreSQL
+- **[📋 Implementation Plan](./docs/CHAT_SEARCH_IMPLEMENTATION_PLAN.md)** - Future search enhancements roadmap
+
+### Key Features
+- **Search Functionality**: Real-time chat search with PostgreSQL integration
+- **Service Architecture**: Seamless switching between mock and real services
+- **Database Integration**: Local PostgreSQL with Neon production support
+- **MCP Tools**: Model Context Protocol integration for enhanced development
+- **Web Database Viewer**: Browser-based PostgreSQL data inspection
+
+Start with the [Documentation Index](./docs/index.md) for a complete overview.

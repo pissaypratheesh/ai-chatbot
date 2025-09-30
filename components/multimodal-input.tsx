@@ -46,6 +46,8 @@ import { PreviewAttachment } from "./preview-attachment";
 import { SuggestedActions } from "./suggested-actions";
 import { Button } from "./ui/button";
 import type { VisibilityType } from "./visibility-selector";
+import { useQuote } from "./providers/QuoteProvider";
+import { CrossSmallIcon } from "./icons";
 
 function PureMultimodalInput({
   chatId,
@@ -82,6 +84,7 @@ function PureMultimodalInput({
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
+  const { quotedText, clearQuote } = useQuote();
 
   const adjustHeight = useCallback(() => {
     if (textareaRef.current) {
@@ -132,6 +135,12 @@ function PureMultimodalInput({
   const submitForm = useCallback(() => {
     window.history.replaceState({}, "", `/chat/${chatId}`);
 
+    // Prepare the message text with quoted context if available
+    let messageText = input;
+    if (quotedText) {
+      messageText = `> "${quotedText}"\n\n${input}`;
+    }
+
     sendMessage({
       role: "user",
       parts: [
@@ -143,7 +152,7 @@ function PureMultimodalInput({
         })),
         {
           type: "text",
-          text: input,
+          text: messageText,
         },
       ],
     });
@@ -152,6 +161,7 @@ function PureMultimodalInput({
     setLocalStorageInput("");
     resetHeight();
     setInput("");
+    clearQuote(); // Clear quoted text after sending
 
     if (width && width > 768) {
       textareaRef.current?.focus();
@@ -166,6 +176,8 @@ function PureMultimodalInput({
     width,
     chatId,
     resetHeight,
+    quotedText,
+    clearQuote,
   ]);
 
   const uploadFile = useCallback(async (file: File) => {
@@ -295,6 +307,29 @@ function PureMultimodalInput({
                 key={filename}
               />
             ))}
+          </div>
+        )}
+
+        {quotedText && (
+          <div className="mb-2 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-950/50">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1">
+                <div className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-1">
+                  Quoted text:
+                </div>
+                <div className="text-sm text-blue-600 dark:text-blue-400 italic">
+                  "{quotedText}"
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={clearQuote}
+                className="h-6 w-6 p-0 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-200"
+              >
+                <CrossSmallIcon className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         )}
         <div className="flex flex-row items-start gap-1 sm:gap-2">

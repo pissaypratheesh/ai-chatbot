@@ -38,9 +38,42 @@ import { generateHashedPassword } from "./utils";
 // use the Drizzle adapter for Auth.js / NextAuth
 // https://authjs.dev/reference/adapter/drizzle
 
+// Database connection with environment-specific configuration
+function createDatabaseConnection() {
+  if (!process.env.POSTGRES_URL) {
+    throw new Error("POSTGRES_URL environment variable is not defined");
+  }
+
+  const isLocal = process.env.POSTGRES_URL.includes('localhost') || 
+                  process.env.POSTGRES_URL.includes('127.0.0.1');
+  const isNeon = process.env.POSTGRES_URL.includes('neon.tech') || 
+                 process.env.POSTGRES_URL.includes('aws.neon.tech');
+
+  const connectionConfig = {
+    max: 20,
+    idle_timeout: 20,
+    connect_timeout: 10,
+    ...(isNeon && {
+      ssl: 'require' as const,
+      max_lifetime: 60 * 30,
+    }),
+    ...(isLocal && {
+      ssl: false,
+      max_lifetime: 60 * 60,
+    }),
+  };
+
+  const client = postgres(process.env.POSTGRES_URL, connectionConfig);
+  const db = drizzle(client);
+
+  return { client, db };
+}
+
 // biome-ignore lint: Forbidden non-null assertion.
-const client = postgres(process.env.POSTGRES_URL!);
-const db = drizzle(client);
+const { client, db } = createDatabaseConnection();
+
+// Export db for use in API routes
+export { db };
 
 export async function getUser(email: string): Promise<User[]> {
   try {

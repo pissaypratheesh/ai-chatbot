@@ -4,7 +4,7 @@ import { isToday, isYesterday, subMonths, subWeeks } from "date-fns";
 import { motion } from "framer-motion";
 import { useParams, useRouter } from "next/navigation";
 import type { User } from "next-auth";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import useSWRInfinite from "swr/infinite";
 import {
@@ -100,6 +100,9 @@ export function getChatHistoryPaginationKey(
 export function SidebarHistory({ user }: { user: User | undefined }) {
   const { setOpenMobile } = useSidebar();
   const { id } = useParams();
+  
+  // Add hydration state to prevent server/client mismatch
+  const [isHydrated, setIsHydrated] = useState(false);
 
   const {
     data: paginatedChatHistories,
@@ -109,6 +112,8 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
     mutate,
   } = useSWRInfinite<ChatHistory>(getChatHistoryPaginationKey, fetcher, {
     fallbackData: [],
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
   });
 
   const router = useRouter();
@@ -122,6 +127,38 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
   const hasEmptyChatHistory = paginatedChatHistories
     ? paginatedChatHistories.every((page) => page.chats.length === 0)
     : false;
+
+  // Ensure component only renders after hydration
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  // Don't render until hydrated to prevent hydration mismatch
+  if (!isHydrated) {
+    return (
+      <div className="flex items-center justify-center p-4">
+        <div className="text-sm text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  // Show loading state if still loading after hydration
+  if (isLoading && (!paginatedChatHistories || paginatedChatHistories.length === 0)) {
+    return (
+      <div className="flex items-center justify-center p-4">
+        <div className="text-sm text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  // Show loading state if no data yet
+  if (!paginatedChatHistories || paginatedChatHistories.length === 0) {
+    return (
+      <div className="flex items-center justify-center p-4">
+        <div className="text-sm text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   const handleDelete = () => {
     const deletePromise = fetch(`/api/chat?id=${deleteId}`, {
@@ -207,16 +244,14 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 
   return (
     <>
-      <SidebarGroup>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            {paginatedChatHistories &&
-              (() => {
-                const chatsFromHistory = paginatedChatHistories.flatMap(
-                  (paginatedChatHistory) => paginatedChatHistory.chats
-                );
+      <SidebarMenu>
+        {paginatedChatHistories &&
+          (() => {
+            const chatsFromHistory = paginatedChatHistories.flatMap(
+              (paginatedChatHistory) => paginatedChatHistory.chats
+            );
 
-                const groupedChats = groupChatsByDate(chatsFromHistory);
+            const groupedChats = groupChatsByDate(chatsFromHistory);
 
                 return (
                   <div className="flex flex-col gap-6">
@@ -322,30 +357,22 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                   </div>
                 );
               })()}
-          </SidebarMenu>
+        
+        <div />
 
-          <motion.div
-            onViewportEnter={() => {
-              if (!isValidating && !hasReachedEnd) {
-                setSize((size) => size + 1);
-              }
-            }}
-          />
-
-          {hasReachedEnd ? (
-            <div className="mt-8 flex w-full flex-row items-center justify-center gap-2 px-2 text-sm text-zinc-500">
-              You have reached the end of your chat history.
+        {hasReachedEnd ? (
+          <div className="mt-8 flex w-full flex-row items-center justify-center gap-2 px-2 text-sm text-zinc-500">
+            You have reached the end of your chat history.
+          </div>
+        ) : (
+          <div className="mt-8 flex flex-row items-center gap-2 p-2 text-zinc-500 dark:text-zinc-400">
+            <div className="animate-spin">
+              <LoaderIcon />
             </div>
-          ) : (
-            <div className="mt-8 flex flex-row items-center gap-2 p-2 text-zinc-500 dark:text-zinc-400">
-              <div className="animate-spin">
-                <LoaderIcon />
-              </div>
-              <div>Loading Chats...</div>
-            </div>
-          )}
-        </SidebarGroupContent>
-      </SidebarGroup>
+            <div>Loading Chats...</div>
+          </div>
+        )}
+      </SidebarMenu>
 
       <AlertDialog onOpenChange={setShowDeleteDialog} open={showDeleteDialog}>
         <AlertDialogContent>
