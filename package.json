@@ -18,7 +18,14 @@
     "db:pull": "drizzle-kit pull",
     "db:check": "drizzle-kit check",
     "db:up": "drizzle-kit up",
-    "test": "export PLAYWRIGHT=True && pnpm exec playwright test"
+    "test": "export PLAYWRIGHT=True && pnpm exec playwright test",
+    "deploy": "chmod +x scripts/deploy.sh && ./scripts/deploy.sh",
+    "deploy:setup": "chmod +x scripts/setup-env.sh && ./scripts/setup-env.sh",
+    "setup:local": "chmod +x scripts/setup-local.sh && ./scripts/setup-local.sh",
+    "vercel:env:pull": "vercel env pull .env.production",
+    "vercel:env:push": "vercel env add",
+    "vercel:deploy": "vercel --prod",
+    "vercel:preview": "vercel"
   },
   "dependencies": {
     "@ai-sdk/gateway": "^1.0.15",
