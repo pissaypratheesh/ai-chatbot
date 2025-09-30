@@ -6,8 +6,16 @@ import { SearchServiceFactory, type MockChat } from "@/lib/mock/searchMockData";
 import { CancellableSearchService } from "@/lib/services/searchService";
 import { SEARCH_CONFIG } from "@/lib/config/searchConfig";
 
-// Use the same interface as mock data for consistency
-type Chat = MockChat;
+// Use the same interface as SearchProvider for consistency
+interface Chat {
+  id: string;
+  title: string;
+  createdAt: Date;
+  visibility: "private" | "public";
+  messageCount?: number;
+  lastMessage?: string;
+  lastMessageAt?: Date;
+}
 
 interface UseSearchOptions {
   onChatClick?: (chatId: string) => void;
@@ -56,10 +64,21 @@ export function useSearch(options: UseSearchOptions = {}) {
       // Use CancellableSearchService for real API calls with AbortController support
       let results: Chat[];
       if (searchService instanceof CancellableSearchService) {
-        results = await searchService.searchChats(query, abortController.signal);
+        const apiResults = await searchService.searchChats(query, abortController.signal);
+        // Convert API results to Chat format
+        results = apiResults.map(chat => ({
+          ...chat,
+          createdAt: typeof chat.createdAt === 'string' ? new Date(chat.createdAt) : chat.createdAt,
+          lastMessageAt: chat.lastMessageAt ? (typeof chat.lastMessageAt === 'string' ? new Date(chat.lastMessageAt) : chat.lastMessageAt) : undefined,
+        }));
       } else {
-        // For mock service, use regular method
-        results = await searchService.searchChats(query);
+        // For mock service, use regular method and convert types
+        const mockResults = await searchService.searchChats(query);
+        results = mockResults.map(chat => ({
+          ...chat,
+          createdAt: typeof chat.createdAt === 'string' ? new Date(chat.createdAt) : chat.createdAt,
+          lastMessageAt: chat.lastMessageAt ? (typeof chat.lastMessageAt === 'string' ? new Date(chat.lastMessageAt) : chat.lastMessageAt) : undefined,
+        }));
       }
       
       // Check if this request was cancelled

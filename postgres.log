@@ -1,0 +1,247 @@
+2025-09-29 15:42:50.004 IST [19558] LOG:  starting PostgreSQL 17.4 on x86_64-apple-darwin13.4.0, compiled by clang version 14.0.6, 64-bit
+2025-09-29 15:42:50.006 IST [19558] LOG:  listening on IPv6 address "::1", port 5432
+2025-09-29 15:42:50.006 IST [19558] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2025-09-29 15:42:50.006 IST [19558] LOG:  listening on Unix socket "/tmp/.s.PGSQL.5432"
+2025-09-29 15:42:50.014 IST [19561] LOG:  database system was shut down at 2025-09-29 15:42:38 IST
+2025-09-29 15:42:50.023 IST [19558] LOG:  database system is ready to accept connections
+2025-09-29 15:47:50.021 IST [19559] LOG:  checkpoint starting: time
+2025-09-29 15:47:50.023 IST [19559] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.001 s, sync=0.001 s, total=0.002 s; sync files=2, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB; lsn=0/150A810, redo lsn=0/150A7B8
+2025-09-29 15:48:43.514 IST [23743] FATAL:  role "postgres" does not exist
+2025-09-29 15:52:50.025 IST [19559] LOG:  checkpoint starting: time
+2025-09-29 15:52:50.436 IST [19559] LOG:  checkpoint complete: wrote 5 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.409 s, sync=0.001 s, total=0.412 s; sync files=5, longest=0.001 s, average=0.001 s; distance=3 kB, estimate=3 kB; lsn=0/150B6C0, redo lsn=0/150B668
+2025-09-29 16:12:50.462 IST [19559] LOG:  checkpoint starting: time
+2025-09-29 16:12:59.288 IST [19559] LOG:  checkpoint complete: wrote 89 buffers (0.5%); 0 WAL file(s) added, 0 removed, 0 recycled; write=8.819 s, sync=0.005 s, total=8.826 s; sync files=82, longest=0.001 s, average=0.001 s; distance=365 kB, estimate=365 kB; lsn=0/1566E30, redo lsn=0/1566DA0
+2025-09-29 16:17:50.299 IST [19559] LOG:  checkpoint starting: time
+2025-09-29 16:17:52.942 IST [19559] LOG:  checkpoint complete: wrote 27 buffers (0.2%); 0 WAL file(s) added, 0 removed, 0 recycled; write=2.639 s, sync=0.002 s, total=2.644 s; sync files=18, longest=0.001 s, average=0.001 s; distance=25 kB, estimate=331 kB; lsn=0/156D598, redo lsn=0/156D508
+2025-09-29 16:54:24.949 IST [60009] ERROR:  invalid input syntax for type uuid: "1"
+2025-09-29 16:54:24.949 IST [60009] CONTEXT:  unnamed portal parameter $1 = '...'
+2025-09-29 16:54:24.949 IST [60009] STATEMENT:  select "id", "createdAt", "title", "userId", "visibility", "lastContext" from "Chat" where "Chat"."id" = $1
+2025-09-29 16:59:41.429 IST [64663] FATAL:  database "pranam" does not exist
+2025-09-29 17:26:05.875 IST [80797] ERROR:  invalid input syntax for type uuid: "4"
+2025-09-29 17:26:05.875 IST [80797] CONTEXT:  unnamed portal parameter $1 = '...'
+2025-09-29 17:26:05.875 IST [80797] STATEMENT:  select "id", "createdAt", "title", "userId", "visibility", "lastContext" from "Chat" where "Chat"."id" = $1
+2025-09-29 17:26:09.658 IST [80797] ERROR:  invalid input syntax for type uuid: "4"
+2025-09-29 17:26:09.658 IST [80797] CONTEXT:  unnamed portal parameter $1 = '...'
+2025-09-29 17:26:09.658 IST [80797] STATEMENT:  select "id", "createdAt", "title", "userId", "visibility", "lastContext" from "Chat" where "Chat"."id" = $1
+2025-09-29 17:26:28.161 IST [80797] ERROR:  invalid input syntax for type uuid: "3"
+2025-09-29 17:26:28.161 IST [80797] CONTEXT:  unnamed portal parameter $1 = '...'
+2025-09-29 17:26:28.161 IST [80797] STATEMENT:  select "id", "createdAt", "title", "userId", "visibility", "lastContext" from "Chat" where "Chat"."id" = $1
+2025-09-29 17:43:27.954 IST [91507] ERROR:  column "created_at" does not exist
+2025-09-29 17:43:27.954 IST [91507] STATEMENT:  CREATE INDEX IF NOT EXISTS idx_chat_search_composite 
+	ON "Chat" (created_at DESC, visibility);
+2025-09-29 17:43:27.954 IST [91507] ERROR:  column "chat_id" does not exist
+2025-09-29 17:43:27.954 IST [91507] STATEMENT:  CREATE INDEX IF NOT EXISTS idx_message_chat_created 
+	ON "Message_v2" (chat_id, created_at DESC);
+2025-09-29 17:43:27.971 IST [91507] ERROR:  column m.chat_id does not exist at character 683
+2025-09-29 17:43:27.971 IST [91507] HINT:  Perhaps you meant to reference the column "m.chatId".
+2025-09-29 17:43:27.971 IST [91507] STATEMENT:  CREATE MATERIALIZED VIEW IF NOT EXISTS chat_search_index AS
+	SELECT 
+	  c.id,
+	  c.title,
+	  c.created_at,
+	  c.visibility,
+	  c.user_id,
+	  COUNT(m.id) as message_count,
+	  MAX(m.created_at) as last_message_at,
+	  COALESCE(
+	    (SELECT extract_message_text(m2.parts) 
+	     FROM "Message_v2" m2 
+	     WHERE m2.chat_id = c.id 
+	     ORDER BY m2.created_at DESC 
+	     LIMIT 1), 
+	    ''
+	  ) as last_message_text,
+	  to_tsvector('english', c.title || ' ' || COALESCE(
+	    (SELECT extract_message_text(m2.parts) 
+	     FROM "Message_v2" m2 
+	     WHERE m2.chat_id = c.id 
+	     ORDER BY m2.created_at DESC 
+	     LIMIT 1), 
+	    ''
+	  )) as search_vector
+	FROM "Chat" c
+	LEFT JOIN "Message_v2" m ON c.id = m.chat_id
+	GROUP BY c.id, c.title, c.created_at, c.visibility, c.user_id;
+2025-09-29 17:43:27.971 IST [91507] ERROR:  relation "chat_search_index" does not exist
+2025-09-29 17:43:27.971 IST [91507] STATEMENT:  CREATE INDEX IF NOT EXISTS idx_chat_search_vector 
+	ON chat_search_index USING gin(search_vector);
+2025-09-29 17:43:27.974 IST [91507] ERROR:  relation "idx_chat_search_composite" does not exist
+2025-09-29 17:43:27.974 IST [91507] STATEMENT:  COMMENT ON INDEX idx_chat_search_composite IS 'Composite index for chat search with relevance scoring';
+2025-09-29 17:43:27.974 IST [91507] ERROR:  relation "idx_message_chat_created" does not exist
+2025-09-29 17:43:27.974 IST [91507] STATEMENT:  COMMENT ON INDEX idx_message_chat_created IS 'Index for efficient message-chat joins';
+2025-09-29 17:43:27.974 IST [91507] ERROR:  relation "chat_search_index" does not exist
+2025-09-29 17:43:27.974 IST [91507] STATEMENT:  COMMENT ON MATERIALIZED VIEW chat_search_index IS 'Materialized view for optimized chat search with pre-computed search vectors';
+2025-09-29 17:45:00.639 IST [92453] ERROR:  function extract_message_text(json) does not exist at character 232
+2025-09-29 17:45:00.639 IST [92453] HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+2025-09-29 17:45:00.639 IST [92453] STATEMENT:  CREATE MATERIALIZED VIEW IF NOT EXISTS chat_search_index AS
+	SELECT 
+	  c.id,
+	  c.title,
+	  c."createdAt",
+	  c.visibility,
+	  c."userId",
+	  COUNT(m.id) as message_count,
+	  MAX(m."createdAt") as last_message_at,
+	  COALESCE(
+	    (SELECT extract_message_text(m2.parts) 
+	     FROM "Message_v2" m2 
+	     WHERE m2."chatId" = c.id 
+	     ORDER BY m2."createdAt" DESC 
+	     LIMIT 1), 
+	    ''
+	  ) as last_message_text,
+	  to_tsvector('english', c.title || ' ' || COALESCE(
+	    (SELECT extract_message_text(m2.parts) 
+	     FROM "Message_v2" m2 
+	     WHERE m2."chatId" = c.id 
+	     ORDER BY m2."createdAt" DESC 
+	     LIMIT 1), 
+	    ''
+	  )) as search_vector
+	FROM "Chat" c
+	LEFT JOIN "Message_v2" m ON c.id = m."chatId"
+	GROUP BY c.id, c.title, c."createdAt", c.visibility, c."userId";
+2025-09-29 17:45:00.639 IST [92453] ERROR:  relation "chat_search_index" does not exist
+2025-09-29 17:45:00.639 IST [92453] STATEMENT:  CREATE INDEX IF NOT EXISTS idx_chat_search_vector 
+	ON chat_search_index USING gin(search_vector);
+2025-09-29 17:45:00.641 IST [92453] ERROR:  relation "chat_search_index" does not exist
+2025-09-29 17:45:00.641 IST [92453] STATEMENT:  COMMENT ON MATERIALIZED VIEW chat_search_index IS 'Materialized view for optimized chat search with pre-computed search vectors';
+2025-09-29 17:45:28.303 IST [92760] ERROR:  function name "extract_message_text" is not unique
+2025-09-29 17:45:28.303 IST [92760] HINT:  Specify the argument list to select the function unambiguously.
+2025-09-29 17:45:28.303 IST [92760] STATEMENT:  COMMENT ON FUNCTION extract_message_text IS 'Function to extract text content from message parts JSON';
+2025-09-29 17:45:32.717 IST [92831] ERROR:  cannot drop function extract_message_text(json) because other objects depend on it
+2025-09-29 17:45:32.717 IST [92831] DETAIL:  materialized view chat_search_index depends on function extract_message_text(json)
+2025-09-29 17:45:32.717 IST [92831] HINT:  Use DROP ... CASCADE to drop the dependent objects too.
+2025-09-29 17:45:32.717 IST [92831] STATEMENT:  DROP FUNCTION IF EXISTS extract_message_text(jsonb); DROP FUNCTION IF EXISTS extract_message_text(json);
+2025-09-29 17:47:50.964 IST [19559] LOG:  checkpoint starting: time
+2025-09-29 17:48:02.139 IST [19559] LOG:  checkpoint complete: wrote 111 buffers (0.7%); 0 WAL file(s) added, 0 removed, 0 recycled; write=11.167 s, sync=0.004 s, total=11.176 s; sync files=67, longest=0.001 s, average=0.001 s; distance=552 kB, estimate=552 kB; lsn=0/15F7618, redo lsn=0/15F7588
+2025-09-29 17:49:46.220 IST [95611] ERROR:  column c.created_at does not exist at character 63
+2025-09-29 17:49:46.220 IST [95611] HINT:  Perhaps you meant to reference the column "c.createdAt".
+2025-09-29 17:49:46.220 IST [95611] STATEMENT:  
+	        SELECT 
+	          c.id,
+	          c.title,
+	          c.created_at,
+	          c.visibility,
+	          c.user_id,
+	          COALESCE(csi.message_count, 0) as message_count,
+	          csi.last_message_at,
+	          COALESCE(csi.last_message_text, 'No messages') as last_message,
+	          ts_rank(csi.search_vector, plainto_tsquery('english', $1)) as relevance_score
+	        FROM "Chat" c
+	        LEFT JOIN chat_search_index csi ON c.id = csi.id
+	        WHERE csi.search_vector @@ plainto_tsquery('english', $2)
+	           OR LOWER(c.title) LIKE $3
+	           OR LOWER(csi.last_message_text) LIKE $4
+	        ORDER BY 
+	          ts_rank(csi.search_vector, plainto_tsquery('english', $5)) DESC,
+	          c.created_at DESC
+	        LIMIT $6 OFFSET $7
+	      
+2025-09-29 17:49:54.087 IST [95611] ERROR:  column c.created_at does not exist at character 63
+2025-09-29 17:49:54.087 IST [95611] HINT:  Perhaps you meant to reference the column "c.createdAt".
+2025-09-29 17:49:54.087 IST [95611] STATEMENT:  
+	        SELECT 
+	          c.id,
+	          c.title,
+	          c.created_at,
+	          c.visibility,
+	          c.user_id,
+	          COALESCE(csi.message_count, 0) as message_count,
+	          csi.last_message_at,
+	          COALESCE(csi.last_message_text, 'No messages') as last_message,
+	          ts_rank(csi.search_vector, plainto_tsquery('english', $1)) as relevance_score
+	        FROM "Chat" c
+	        LEFT JOIN chat_search_index csi ON c.id = csi.id
+	        WHERE csi.search_vector @@ plainto_tsquery('english', $2)
+	           OR LOWER(c.title) LIKE $3
+	           OR LOWER(csi.last_message_text) LIKE $4
+	        ORDER BY 
+	          ts_rank(csi.search_vector, plainto_tsquery('english', $5)) DESC,
+	          c.created_at DESC
+	        LIMIT $6 OFFSET $7
+	      
+2025-09-29 17:50:17.993 IST [96053] ERROR:  column "relevancescore" does not exist at character 1093
+2025-09-29 17:50:17.993 IST [96053] STATEMENT:  select "id", "title", "createdAt", "visibility", "userId", (
+	          SELECT COUNT(*)::int 
+	          FROM "Message_v2" 
+	          WHERE "chatId" = "id"
+	        ), (
+	          SELECT "parts"::text 
+	          FROM "Message_v2" 
+	          WHERE "chatId" = "id" 
+	          ORDER BY "createdAt" DESC 
+	          LIMIT 1
+	        ), (
+	          SELECT "createdAt" 
+	          FROM "Message_v2" 
+	          WHERE "chatId" = "id" 
+	          ORDER BY "createdAt" DESC 
+	          LIMIT 1
+	        ), 
+	          CASE 
+	            WHEN LOWER("title") LIKE $1 THEN 3
+	            WHEN LOWER("title") LIKE $2 THEN 2
+	            ELSE 1
+	          END +
+	          CASE 
+	            WHEN EXISTS(
+	              SELECT 1 FROM "Message_v2" 
+	              WHERE "chatId" = "id" 
+	              AND LOWER("parts"::text) LIKE $3
+	            ) THEN 2
+	            ELSE 0
+	          END
+	         from "Chat" where ("Chat"."title" ilike $4 or EXISTS(
+	            SELECT 1 FROM "Message_v2" 
+	            WHERE "Message_v2"."chatId" = "Chat"."id" 
+	            AND LOWER("Message_v2"."parts"::text) LIKE $5
+	          )) order by relevanceScore desc, "Chat"."createdAt" desc limit $6
+2025-09-29 17:52:50.142 IST [19559] LOG:  checkpoint starting: time
+2025-09-29 17:52:52.177 IST [19559] LOG:  checkpoint complete: wrote 21 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=2.032 s, sync=0.002 s, total=2.036 s; sync files=18, longest=0.001 s, average=0.001 s; distance=13 kB, estimate=498 kB; lsn=0/15FAB10, redo lsn=0/15FAA80
+2025-09-30 12:02:50.903 IST [19559] LOG:  checkpoint starting: time
+2025-09-30 12:02:52.231 IST [19559] LOG:  checkpoint complete: wrote 14 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.323 s, sync=0.002 s, total=1.329 s; sync files=12, longest=0.001 s, average=0.001 s; distance=16 kB, estimate=450 kB; lsn=0/15FEBC0, redo lsn=0/15FEB68
+2025-09-30 12:07:50.234 IST [19559] LOG:  checkpoint starting: time
+2025-09-30 12:07:51.761 IST [19559] LOG:  checkpoint complete: wrote 16 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.523 s, sync=0.002 s, total=1.528 s; sync files=14, longest=0.001 s, average=0.001 s; distance=22 kB, estimate=407 kB; lsn=0/1604600, redo lsn=0/1604570
+2025-09-30 12:32:50.770 IST [19559] LOG:  checkpoint starting: time
+2025-09-30 12:32:52.196 IST [19559] LOG:  checkpoint complete: wrote 15 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.422 s, sync=0.002 s, total=1.427 s; sync files=12, longest=0.001 s, average=0.001 s; distance=25 kB, estimate=369 kB; lsn=0/160AD50, redo lsn=0/160ACF8
+2025-09-30 12:42:50.207 IST [19559] LOG:  checkpoint starting: time
+2025-09-30 12:42:52.454 IST [19559] LOG:  checkpoint complete: wrote 23 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=2.242 s, sync=0.002 s, total=2.247 s; sync files=19, longest=0.001 s, average=0.001 s; distance=27 kB, estimate=334 kB; lsn=0/16119D0, redo lsn=0/1611978
+2025-09-30 12:47:50.458 IST [19559] LOG:  checkpoint starting: time
+2025-09-30 12:47:52.193 IST [19559] LOG:  checkpoint complete: wrote 18 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.729 s, sync=0.002 s, total=1.735 s; sync files=15, longest=0.001 s, average=0.001 s; distance=24 kB, estimate=303 kB; lsn=0/1617A40, redo lsn=0/16179E8
+2025-09-30 13:02:50.186 IST [19559] LOG:  checkpoint starting: time
+2025-09-30 13:02:52.527 IST [19559] LOG:  checkpoint complete: wrote 24 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=2.337 s, sync=0.002 s, total=2.342 s; sync files=17, longest=0.001 s, average=0.001 s; distance=56 kB, estimate=279 kB; lsn=0/1625C18, redo lsn=0/1625BC0
+2025-09-30 13:32:50.562 IST [19559] LOG:  checkpoint starting: time
+2025-09-30 13:32:52.394 IST [19559] LOG:  checkpoint complete: wrote 19 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.829 s, sync=0.002 s, total=1.833 s; sync files=16, longest=0.001 s, average=0.001 s; distance=34 kB, estimate=254 kB; lsn=0/162E448, redo lsn=0/162E3F0
+2025-09-30 13:37:50.397 IST [19559] LOG:  checkpoint starting: time
+2025-09-30 13:37:51.923 IST [19559] LOG:  checkpoint complete: wrote 16 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.524 s, sync=0.001 s, total=1.527 s; sync files=14, longest=0.001 s, average=0.001 s; distance=32 kB, estimate=232 kB; lsn=0/1636800, redo lsn=0/1636770
+2025-09-30 13:42:50.926 IST [19559] LOG:  checkpoint starting: time
+2025-09-30 13:42:52.252 IST [19559] LOG:  checkpoint complete: wrote 14 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.322 s, sync=0.001 s, total=1.327 s; sync files=12, longest=0.001 s, average=0.001 s; distance=26 kB, estimate=211 kB; lsn=0/163D058, redo lsn=0/163D000
+2025-09-30 13:47:50.260 IST [19559] LOG:  checkpoint starting: time
+2025-09-30 13:47:50.975 IST [19559] LOG:  checkpoint complete: wrote 8 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.713 s, sync=0.001 s, total=0.715 s; sync files=6, longest=0.001 s, average=0.001 s; distance=23 kB, estimate=192 kB; lsn=0/1642DC8, redo lsn=0/1642D38
+2025-09-30 13:52:50.978 IST [19559] LOG:  checkpoint starting: time
+2025-09-30 13:52:52.303 IST [19559] LOG:  checkpoint complete: wrote 14 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.321 s, sync=0.002 s, total=1.325 s; sync files=12, longest=0.001 s, average=0.001 s; distance=30 kB, estimate=176 kB; lsn=0/164A830, redo lsn=0/164A7D8
+2025-09-30 13:57:50.306 IST [19559] LOG:  checkpoint starting: time
+2025-09-30 13:57:50.612 IST [19559] LOG:  checkpoint complete: wrote 4 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.304 s, sync=0.001 s, total=0.307 s; sync files=4, longest=0.001 s, average=0.001 s; distance=4 kB, estimate=159 kB; lsn=0/164B9F0, redo lsn=0/164B998
+2025-09-30 14:02:50.616 IST [19559] LOG:  checkpoint starting: time
+2025-09-30 14:02:52.348 IST [19559] LOG:  checkpoint complete: wrote 18 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.727 s, sync=0.002 s, total=1.732 s; sync files=14, longest=0.001 s, average=0.001 s; distance=37 kB, estimate=147 kB; lsn=0/1654FE0, redo lsn=0/1654F88
+2025-09-30 14:07:50.351 IST [19559] LOG:  checkpoint starting: time
+2025-09-30 14:07:52.387 IST [19559] LOG:  checkpoint complete: wrote 21 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=2.033 s, sync=0.002 s, total=2.036 s; sync files=18, longest=0.001 s, average=0.001 s; distance=48 kB, estimate=137 kB; lsn=0/16611C8, redo lsn=0/1661138
+2025-09-30 14:12:50.390 IST [19559] LOG:  checkpoint starting: time
+2025-09-30 14:12:51.918 IST [19559] LOG:  checkpoint complete: wrote 16 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.524 s, sync=0.002 s, total=1.528 s; sync files=13, longest=0.001 s, average=0.001 s; distance=31 kB, estimate=126 kB; lsn=0/1668F20, redo lsn=0/1668EC8
+2025-09-30 14:17:50.922 IST [19559] LOG:  checkpoint starting: time
+2025-09-30 14:17:51.132 IST [19559] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.206 s, sync=0.001 s, total=0.211 s; sync files=3, longest=0.001 s, average=0.001 s; distance=5 kB, estimate=114 kB; lsn=0/166A4B8, redo lsn=0/166A460
+2025-09-30 14:27:50.139 IST [19559] LOG:  checkpoint starting: time
+2025-09-30 14:27:51.469 IST [19559] LOG:  checkpoint complete: wrote 14 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.325 s, sync=0.002 s, total=1.331 s; sync files=12, longest=0.001 s, average=0.001 s; distance=26 kB, estimate=105 kB; lsn=0/1670E60, redo lsn=0/1670E08
+2025-09-30 14:42:50.448 IST [19559] LOG:  checkpoint starting: time
+2025-09-30 14:42:52.588 IST [19559] LOG:  checkpoint complete: wrote 22 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=2.135 s, sync=0.002 s, total=2.140 s; sync files=19, longest=0.001 s, average=0.001 s; distance=51 kB, estimate=100 kB; lsn=0/167DCF0, redo lsn=0/167DC60
+2025-09-30 14:52:50.565 IST [19559] LOG:  checkpoint starting: time
+2025-09-30 14:52:52.198 IST [19559] LOG:  checkpoint complete: wrote 17 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.628 s, sync=0.001 s, total=1.633 s; sync files=13, longest=0.001 s, average=0.001 s; distance=35 kB, estimate=93 kB; lsn=0/1686978, redo lsn=0/1686920
+2025-09-30 15:17:50.194 IST [19559] LOG:  checkpoint starting: time
+2025-09-30 15:17:55.279 IST [19559] LOG:  checkpoint complete: wrote 51 buffers (0.3%); 0 WAL file(s) added, 0 removed, 0 recycled; write=5.079 s, sync=0.002 s, total=5.086 s; sync files=23, longest=0.001 s, average=0.001 s; distance=198 kB, estimate=198 kB; lsn=0/16B8548, redo lsn=0/16B84F0
+2025-09-30 15:47:50.297 IST [19559] LOG:  checkpoint starting: time
+2025-09-30 15:47:51.219 IST [19559] LOG:  checkpoint complete: wrote 10 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.917 s, sync=0.002 s, total=0.922 s; sync files=9, longest=0.001 s, average=0.001 s; distance=18 kB, estimate=180 kB; lsn=0/16BCEA0, redo lsn=0/16BCE48
+2025-09-30 16:44:24.185 IST [19559] LOG:  checkpoint starting: time
+2025-09-30 16:44:25.005 IST [19559] LOG:  checkpoint complete: wrote 9 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.815 s, sync=0.002 s, total=0.822 s; sync files=8, longest=0.001 s, average=0.001 s; distance=24 kB, estimate=165 kB; lsn=0/16C2EE8, redo lsn=0/16C2E58
+2025-09-30 16:59:24.024 IST [19559] LOG:  checkpoint starting: time
+2025-09-30 16:59:24.230 IST [19559] LOG:  checkpoint complete: wrote 2 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.204 s, sync=0.001 s, total=0.207 s; sync files=1, longest=0.001 s, average=0.001 s; distance=3 kB, estimate=149 kB; lsn=0/16C3E10, redo lsn=0/16C3DB8

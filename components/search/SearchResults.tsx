@@ -53,7 +53,7 @@ export function SearchResults({
       const isInputFocused = activeElement && (
         activeElement.tagName === 'INPUT' || 
         activeElement.tagName === 'TEXTAREA' ||
-        activeElement.contentEditable === 'true'
+        (activeElement as HTMLElement).contentEditable === 'true'
       );
 
       // Handle arrow down from input field
@@ -171,7 +171,7 @@ export function SearchResults({
       {chats.map((chat, index) => (
         <button
           key={chat.id}
-          ref={(el) => (itemRefs.current[index] = el)}
+          ref={(el) => { itemRefs.current[index] = el; }}
           onClick={() => onChatClick?.(chat.id)}
           className={`group flex flex-col p-3 rounded-lg cursor-pointer transition-colors w-full text-left ${
             selectedIndex === index

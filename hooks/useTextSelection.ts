@@ -18,7 +18,7 @@ export function useTextSelection(options: UseTextSelectionOptions = {}) {
   const { onQuote, enabled = true } = options;
   const [selection, setSelection] = useState<TextSelection | null>(null);
   const [isVisible, setIsVisible] = useState(false);
-  const containerRef = useRef<HTMLElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Helper function to find the closest element node
   const findElementNode = useCallback((node: Node): Element | null => {

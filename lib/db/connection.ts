@@ -31,7 +31,7 @@ export function createDatabaseConnection() {
     // Environment-specific configuration
     ...(isNeon && {
       // Neon-specific optimizations
-      ssl: 'require', // Require SSL for Neon
+      ssl: 'require' as const, // Require SSL for Neon
       max_lifetime: 60 * 30, // 30 minutes max connection lifetime
     }),
     

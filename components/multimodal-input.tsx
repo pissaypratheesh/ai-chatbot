@@ -327,7 +327,7 @@ function PureMultimodalInput({
                 onClick={clearQuote}
                 className="h-6 w-6 p-0 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-200"
               >
-                <CrossSmallIcon className="h-4 w-4" />
+                <CrossSmallIcon size={16} />
               </Button>
             </div>
           </div>

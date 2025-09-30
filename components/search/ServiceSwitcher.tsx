@@ -9,7 +9,7 @@ import { SEARCH_CONFIG } from "@/lib/config/searchConfig";
  * Allows easy switching between mock and real search services
  */
 export function ServiceSwitcher() {
-  const [isUsingMock, setIsUsingMock] = useState(SEARCH_CONFIG.USE_MOCK_SERVICE);
+  const [isUsingMock, setIsUsingMock] = useState<boolean>(SEARCH_CONFIG.USE_MOCK_SERVICE);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
