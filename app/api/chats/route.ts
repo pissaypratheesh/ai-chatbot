@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
         const lastMessageData = lastMessageResult[0];
         
         let lastMessageText = "No messages";
-        if (lastMessageData?.parts) {
+        if (lastMessageData?.parts && typeof lastMessageData.parts === 'string') {
           try {
             const parsedMessage = JSON.parse(lastMessageData.parts);
             const textPart = parsedMessage.find((part: any) => part.type === "text");
