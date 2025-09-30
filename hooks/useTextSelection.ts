@@ -144,14 +144,15 @@ export function useTextSelection(options: UseTextSelectionOptions = {}) {
       }
     };
 
-    // Hide native browser popups aggressively
+    // Hide native browser popups aggressively - but exclude sidebar elements
     const hideNativePopups = () => {
       const nativePopups = document.querySelectorAll(
-        '[data-testid="mini-menu"], .mini-menu, [class*="mini-menu"], [role="toolbar"], [class*="toolbar"], [class*="selection"], [class*="popup"], [class*="menu"], [class*="context"], [class*="action"]'
+        '[data-testid="mini-menu"], .mini-menu, [class*="mini-menu"], [role="toolbar"], [class*="toolbar"], [class*="selection"], [class*="popup"], [class*="context"], [class*="action"]'
       );
       nativePopups.forEach(popup => {
         const element = popup as HTMLElement;
-        if (!element.closest('[data-quote-popup]')) {
+        // Exclude our custom popup AND sidebar elements
+        if (!element.closest('[data-quote-popup]') && !element.closest('[data-sidebar]') && !element.hasAttribute('data-sidebar')) {
           element.style.display = 'none';
           element.style.visibility = 'hidden';
           element.style.opacity = '0';
@@ -161,9 +162,23 @@ export function useTextSelection(options: UseTextSelectionOptions = {}) {
       });
     };
 
+    // Restore sidebar elements that might have been accidentally hidden
+    const restoreSidebarElements = () => {
+      const sidebarElements = document.querySelectorAll('[data-sidebar]');
+      sidebarElements.forEach(element => {
+        const el = element as HTMLElement;
+        el.style.display = '';
+        el.style.visibility = '';
+        el.style.opacity = '';
+        el.style.pointerEvents = '';
+        el.style.zIndex = '';
+      });
+    };
+
     // Observer to continuously hide native popups
     const popupObserver = new MutationObserver(() => {
       hideNativePopups();
+      restoreSidebarElements(); // Also restore sidebar elements
     });
 
     popupObserver.observe(document.body, {
@@ -202,6 +217,9 @@ export function useTextSelection(options: UseTextSelectionOptions = {}) {
     };
 
     document.addEventListener("selectionchange", enhancedHandleSelectionChange);
+
+    // Immediately restore any sidebar elements that might be hidden
+    restoreSidebarElements();
 
     return () => {
       document.removeEventListener("selectionchange", handleSelectionChange);

@@ -84,7 +84,7 @@
 [class*="selection"]:not([data-sidebar]),
 [class*="popup"]:not([data-sidebar]),
 [class*="context"]:not([data-sidebar]),
-[class*="action"]:not([data-sidebar]),
+[class*="action"]:not([data-sidebar]):not([data-sidebar="menu-action"]),
 [class*="copilot"]:not([data-sidebar]),
 [class*="hide-menu"]:not([data-sidebar]),
 [class*="more-actions"]:not([data-sidebar]) {
