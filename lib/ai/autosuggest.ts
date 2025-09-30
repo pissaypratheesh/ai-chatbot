@@ -3,7 +3,7 @@
  * Uses existing AI providers to generate contextual suggestions
  */
 
-import { LanguageModel } from "ai";
+import { generateText, LanguageModel } from "ai";
 import type { AutosuggestResult } from "@/lib/mock/autosuggestMockData";
 
 /**
@@ -38,14 +38,13 @@ Example format:
 ]`;
 
   try {
-    const result = await model.generateText({
+    const { text } = await generateText({
+      model,
       prompt,
-      maxTokens: 300,
-      temperature: 0.7,
     });
 
     // Parse the JSON response
-    const suggestions = JSON.parse(result.text);
+    const suggestions = JSON.parse(text);
     
     // Validate and format the suggestions
     return suggestions.map((s: any, index: number) => ({
@@ -75,26 +74,26 @@ function generateFallbackSuggestions(text: string, maxSuggestions: number): Auto
   // Common completions based on text patterns
   if (text.toLowerCase().includes("tell me")) {
     fallbackSuggestions.push(
-      { id: "fallback-1", text: "tell me about", type: "completion", confidence: 0.8 },
-      { id: "fallback-2", text: "tell me how to", type: "completion", confidence: 0.7 },
-      { id: "fallback-3", text: "tell me more about", type: "completion", confidence: 0.6 }
+      { id: "fallback-1", text: "tell me about", type: "completion" as const, confidence: 0.8 },
+      { id: "fallback-2", text: "tell me how to", type: "completion" as const, confidence: 0.7 },
+      { id: "fallback-3", text: "tell me more about", type: "completion" as const, confidence: 0.6 }
     );
   } else if (text.toLowerCase().includes("what")) {
     fallbackSuggestions.push(
-      { id: "fallback-4", text: "what are the benefits of", type: "question", confidence: 0.8 },
-      { id: "fallback-5", text: "what is the best way to", type: "question", confidence: 0.7 }
+      { id: "fallback-4", text: "what are the benefits of", type: "question" as const, confidence: 0.8 },
+      { id: "fallback-5", text: "what is the best way to", type: "question" as const, confidence: 0.7 }
     );
   } else if (text.toLowerCase().includes("how")) {
     fallbackSuggestions.push(
-      { id: "fallback-6", text: "how does", type: "question", confidence: 0.8 },
-      { id: "fallback-7", text: "how to", type: "question", confidence: 0.7 }
+      { id: "fallback-6", text: "how does", type: "question" as const, confidence: 0.8 },
+      { id: "fallback-7", text: "how to", type: "question" as const, confidence: 0.7 }
     );
   } else {
     // Generic completions
     fallbackSuggestions.push(
-      { id: "fallback-8", text: "explain", type: "command", confidence: 0.6 },
-      { id: "fallback-9", text: "help me with", type: "completion", confidence: 0.5 },
-      { id: "fallback-10", text: "create a", type: "command", confidence: 0.5 }
+      { id: "fallback-8", text: "explain", type: "command" as const, confidence: 0.6 },
+      { id: "fallback-9", text: "help me with", type: "completion" as const, confidence: 0.5 },
+      { id: "fallback-10", text: "create a", type: "command" as const, confidence: 0.5 }
     );
   }
   
@@ -129,13 +128,12 @@ Example format:
 ]`;
 
   try {
-    const result = await model.generateText({
+    const { text } = await generateText({
+      model,
       prompt,
-      maxTokens: 300,
-      temperature: 0.8,
     });
 
-    const suggestions = JSON.parse(result.text);
+    const suggestions = JSON.parse(text);
     
     return suggestions.map((s: any, index: number) => ({
       id: s.id || `starter-${Date.now()}-${index}`,
@@ -149,11 +147,11 @@ Example format:
     
     // Fallback starter suggestions
     return [
-      { id: "starter-fallback-1", text: "help me with", type: "completion", confidence: 0.9 },
-      { id: "starter-fallback-2", text: "what are the benefits of", type: "question", confidence: 0.8 },
-      { id: "starter-fallback-3", text: "explain how to", type: "completion", confidence: 0.8 },
-      { id: "starter-fallback-4", text: "create a", type: "command", confidence: 0.7 },
-      { id: "starter-fallback-5", text: "tell me about", type: "completion", confidence: 0.7 },
+      { id: "starter-fallback-1", text: "help me with", type: "completion" as const, confidence: 0.9 },
+      { id: "starter-fallback-2", text: "what are the benefits of", type: "question" as const, confidence: 0.8 },
+      { id: "starter-fallback-3", text: "explain how to", type: "completion" as const, confidence: 0.8 },
+      { id: "starter-fallback-4", text: "create a", type: "command" as const, confidence: 0.7 },
+      { id: "starter-fallback-5", text: "tell me about", type: "completion" as const, confidence: 0.7 },
     ].slice(0, maxSuggestions);
   }
 }

@@ -55,7 +55,7 @@ export async function testAutosuggestBackend() {
     await promise;
     console.log("❌ Request should have been cancelled");
   } catch (error) {
-    if (error.name === "AbortError") {
+    if (error instanceof Error && error.name === "AbortError") {
       console.log("✅ Request cancellation working correctly");
     } else {
       console.error("❌ Unexpected error:", error);

@@ -62,11 +62,11 @@ export async function POST(request: NextRequest) {
  * Generate starter suggestions for empty input
  */
 export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const modelId = searchParams.get("modelId") || "chat-model";
-    const maxSuggestions = parseInt(searchParams.get("maxSuggestions") || "5");
+  const { searchParams } = new URL(request.url);
+  const modelId = searchParams.get("modelId") || "chat-model";
+  const maxSuggestions = parseInt(searchParams.get("maxSuggestions") || "5");
 
+  try {
     // Get the AI model
     const model = myProvider.languageModel(modelId);
     
@@ -84,16 +84,16 @@ export async function GET(request: NextRequest) {
     
     // Return fallback starter suggestions
     const fallbackSuggestions: AutosuggestResult[] = [
-      { id: "starter-fallback-1", text: "help me with", type: "completion", confidence: 0.9 },
-      { id: "starter-fallback-2", text: "what are the benefits of", type: "question", confidence: 0.8 },
-      { id: "starter-fallback-3", text: "explain how to", type: "completion", confidence: 0.8 },
-      { id: "starter-fallback-4", text: "create a", type: "command", confidence: 0.7 },
-      { id: "starter-fallback-5", text: "tell me about", type: "completion", confidence: 0.7 },
-    ].slice(0, parseInt(searchParams.get("maxSuggestions") || "5"));
+      { id: "starter-fallback-1", text: "help me with", type: "completion" as const, confidence: 0.9 },
+      { id: "starter-fallback-2", text: "what are the benefits of", type: "question" as const, confidence: 0.8 },
+      { id: "starter-fallback-3", text: "explain how to", type: "completion" as const, confidence: 0.8 },
+      { id: "starter-fallback-4", text: "create a", type: "command" as const, confidence: 0.7 },
+      { id: "starter-fallback-5", text: "tell me about", type: "completion" as const, confidence: 0.7 },
+    ].slice(0, maxSuggestions);
 
     return NextResponse.json({ 
       suggestions: fallbackSuggestions,
-      model: searchParams.get("modelId") || "chat-model",
+      model: modelId,
       timestamp: new Date().toISOString()
     });
   }
