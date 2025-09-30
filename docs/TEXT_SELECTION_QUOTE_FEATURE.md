@@ -258,40 +258,172 @@ stateDiagram-v2
 ## 🔍 Technical Implementation
 
 ### Text Selection Detection
-```typescript
-// Key implementation details:
-- Uses document.addEventListener("selectionchange")
-- Checks if selection is within assistant message container
-- Validates selection is not collapsed (has actual text)
-- Calculates position relative to container
-- Handles cleanup on component unmount
-- Prevents selection on user messages
-```
+- **File**: `hooks/useTextSelection.ts` (Lines 52-111)
+- **Key implementation details**:
+  - Uses `document.addEventListener("selectionchange")`
+  - Checks if selection is within assistant message container
+  - Validates selection is not collapsed (has actual text)
+  - Calculates position relative to container
+  - Handles cleanup on component unmount
+  - Prevents selection on user messages
 
-### Popup Positioning
 ```typescript
-// Position calculation:
-const getSelectionPosition = (range: Range) => {
+// Text selection detection and extraction
+const handleSelectionChange = () => {
+  const selection = window.getSelection();
+  const text = selection?.toString().trim();
+
+  if (!text || text.length === 0 || !selection) {
+    setSelection(null);
+    setIsVisible(false);
+    return;
+  }
+
+  // Check if selection is within our container and assistant message
+  const range = selection.getRangeAt(0);
+  const elementNode = findElementNode(range.commonAncestorContainer);
+  
+  if (!elementNode) {
+    setSelection(null);
+    setIsVisible(false);
+    return;
+  }
+
+  const assistantMessage = elementNode.closest('[data-role="assistant"]');
+  if (!assistantMessage || !containerRef.current?.contains(assistantMessage)) {
+    setSelection(null);
+    setIsVisible(false);
+    return;
+  }
+
+  // Check if selection is within interactive elements
+  const interactiveElement = elementNode.closest('button, a, input, textarea, select');
+  if (interactiveElement) {
+    setSelection(null);
+    setIsVisible(false);
+    return;
+  }
+
+  // Position popup above the selection with better positioning
   const rect = range.getBoundingClientRect();
   const containerRect = containerRef.current?.getBoundingClientRect();
   
-  return {
-    x: rect.left - (containerRect?.left || 0),
-    y: rect.top - (containerRect?.top || 0),
-  };
-};
+  if (!containerRect) {
+    setSelection(null);
+    setIsVisible(false);
+    return;
+  }
 
-// Popup positioning:
-style={{
-  left: position.x,
-  top: position.y - 50, // Position above selection
-  transform: "translateX(-50%)", // Center horizontally
-}}
+  // Position popup to the right of selection to avoid overlap with native popup
+  const position = {
+    x: rect.right - containerRect.left + 10, // Position to the right
+    y: rect.top - containerRect.top - 10, // Slightly above
+  };
+
+  setSelection({
+    text,
+    range: range.cloneRange(),
+    position,
+    element: assistantMessage,
+  });
+  setIsVisible(true);
+};
+```
+
+### Quote Popup Display
+- **File**: `components/quote-popup.tsx` (Lines 1-50)
+- **Key features**:
+  - Shows preview of selected text (truncated if long)
+  - Custom UI with rounded corners and shadow
+  - Positioned dynamically based on selection
+  - Smooth fade-in animation
+
+```typescript
+// Quote popup component with text display
+interface QuotePopupProps {
+  selection: TextSelection;
+  isVisible: boolean;
+  onQuote: () => void;
+  className?: string;
+}
+
+export function QuotePopup({ selection, isVisible, onQuote, className }: QuotePopupProps) {
+  if (!isVisible || !selection) return null;
+
+  // Truncate long text for display
+  const displayText = selection.text.length > 47 
+    ? `${selection.text.substring(0, 47)}...` 
+    : selection.text;
+
+  return (
+    <div
+      className={cn(
+        "absolute z-50 flex items-center gap-2 rounded-lg border bg-background p-2 shadow-lg",
+        "animate-in fade-in-0 zoom-in-95 duration-200",
+        className
+      )}
+      data-quote-popup
+      style={{
+        left: selection.position.x,
+        top: selection.position.y,
+        transform: "translateX(-50%)",
+      }}
+      onClick={(e) => e.stopPropagation()}
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      <div className="flex items-center gap-2">
+        <MessageSquareQuote className="h-4 w-4 text-blue-600" />
+        <span className="text-sm font-medium text-gray-700">
+          "{displayText}"
+        </span>
+      </div>
+      <Button
+        size="sm"
+        onClick={onQuote}
+        className="h-6 px-2 text-xs"
+      >
+        Quote
+      </Button>
+    </div>
+  );
+}
 ```
 
 ### Context Integration
+- **File**: `components/multimodal-input.tsx` (Lines 580-599)
+- **Key features**:
+  - Displays quoted text in blue-themed preview box
+  - Prepends quoted text to user input with proper formatting
+  - Clears quote after sending message
+
 ```typescript
-// Form submission enhancement:
+// Quoted text display and context integration
+const { quotedText, clearQuote } = useQuote();
+
+// Display quoted text preview
+{quotedText && (
+  <div className="mb-3 rounded-lg border border-blue-200 bg-blue-50 p-3">
+    <div className="flex items-start justify-between">
+      <div className="flex items-center gap-2">
+        <MessageSquareQuote className="h-4 w-4 text-blue-600" />
+        <span className="text-sm font-medium text-blue-800">
+          Quoted text:
+        </span>
+      </div>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={clearQuote}
+        className="h-6 w-6 p-0 text-blue-600 hover:bg-blue-100"
+      >
+        <CrossSmallIcon className="h-4 w-4" />
+      </Button>
+    </div>
+    <p className="mt-1 text-sm text-blue-700">"{quotedText}"</p>
+  </div>
+)}
+
+// Enhanced form submission with quoted context
 const submitForm = useCallback(() => {
   let messageText = input;
   if (quotedText) {
@@ -391,9 +523,12 @@ const submitForm = useCallback(() => {
 
 #### Microsoft Edge Mini Menu Issue
 
-Microsoft Edge has a built-in "mini menu" that appears when text is selected, which can interfere with our custom quote popup. Here are the solutions:
+Microsoft Edge has a built-in "mini menu" that appears when text is selected, which can interfere with our custom quote popup. Here are the solutions and their implementation status:
 
-**Solution 1: Disable Edge Mini Menu (Recommended)**
+**Solution 1: Disable Edge Mini Menu (User Settings)**
+- **Status**: ❌ **NOT IMPLEMENTED** (User-dependent)
+- **Effectiveness**: ✅ **WORKS** when users follow instructions
+- **Limitation**: Requires manual user action
 
 Via Edge Settings:
 1. Open Microsoft Edge
@@ -409,57 +544,95 @@ Via Group Policy (For IT Administrators):
 4. Set to "Disabled"
 
 **Solution 2: Enhanced Code Implementation**
-
-Our implementation includes additional Edge-specific handling:
+- **Status**: ✅ **IMPLEMENTED & WORKING**
+- **File**: `hooks/useTextSelection.ts` (Lines 113-145)
 
 ```typescript
 // Enhanced context menu prevention for Edge
 const handleContextMenu = (e: MouseEvent) => {
   const selection = window.getSelection();
-  if (selection && !selection.isCollapsed && containerRef.current) {
-    const range = selection.getRangeAt(0);
-    const elementNode = findElementNode(range.commonAncestorContainer);
+  if (selection && selection.toString().length > 0) {
+    const target = e.target as Node;
+    const elementNode = findElementNode(target);
     
-    if (elementNode && containerRef.current.contains(elementNode)) {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      // Additional Edge-specific prevention
-      if (navigator.userAgent.includes('Edg/')) {
-        // Force hide any existing mini menus
-        const miniMenus = document.querySelectorAll('[data-testid="mini-menu"]');
-        miniMenus.forEach(menu => {
-          (menu as HTMLElement).style.display = 'none';
-        });
+    if (elementNode) {
+      const assistantMessage = elementNode.closest('[data-role="assistant"]');
+      if (assistantMessage && containerRef.current?.contains(assistantMessage)) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
       }
     }
   }
 };
+
+// Additional prevention for selectstart event
+const handleSelectStart = (e: Event) => {
+  const target = e.target as Node;
+  const elementNode = findElementNode(target);
+  
+  if (elementNode) {
+    const assistantMessage = elementNode.closest('[data-role="assistant"]');
+    if (assistantMessage && containerRef.current?.contains(assistantMessage)) {
+      // Don't prevent selection, but prepare to hide native popup
+      setTimeout(() => {
+        hideNativePopups();
+      }, 10);
+    }
+  }
+};
+
+// Hide native browser popups aggressively - but exclude sidebar elements
+const hideNativePopups = () => {
+  const nativePopups = document.querySelectorAll(
+    '[data-testid="mini-menu"], .mini-menu, [class*="mini-menu"], [role="toolbar"], [class*="toolbar"], [class*="selection"], [class*="popup"], [class*="context"], [class*="action"]'
+  );
+  nativePopups.forEach(popup => {
+    const element = popup as HTMLElement;
+    // Exclude our custom popup AND sidebar elements
+    if (!element.closest('[data-quote-popup]') && !element.closest('[data-sidebar]') && !element.hasAttribute('data-sidebar')) {
+      element.style.display = 'none';
+      element.style.visibility = 'hidden';
+      element.style.opacity = '0';
+      element.style.pointerEvents = 'none';
+      element.style.zIndex = '-1';
+    }
+  });
+};
 ```
 
 **Solution 3: CSS-Based Prevention**
+- **Status**: ✅ **IMPLEMENTED & WORKING**
+- **File**: `app/globals.css` (Lines 78-95)
 
 ```css
-/* Additional CSS to prevent Edge mini menu */
-[data-role="assistant"] {
-  -webkit-touch-callout: none;
-  -webkit-user-select: text;
-  -moz-user-select: text;
-  -ms-user-select: text;
-  user-select: text;
-}
-
-/* Hide Edge mini menu specifically */
-[data-testid="mini-menu"] {
+/* Hide native browser selection popups - be specific to avoid affecting sidebar */
+[data-testid="mini-menu"],
+.mini-menu,
+[class*="mini-menu"]:not([data-sidebar]),
+[role="toolbar"]:not([data-sidebar]),
+[class*="toolbar"]:not([data-sidebar]),
+[class*="selection"]:not([data-sidebar]),
+[class*="popup"]:not([data-sidebar]),
+[class*="context"]:not([data-sidebar]),
+[class*="action"]:not([data-sidebar]):not([data-sidebar="menu-action"]),
+[class*="copilot"]:not([data-sidebar]),
+[class*="hide-menu"]:not([data-sidebar]),
+[class*="more-actions"]:not([data-sidebar]) {
   display: none !important;
-}
-
-/* Prevent Edge's selection overlay */
-[data-role="assistant"]::selection {
-  background-color: rgba(59, 130, 246, 0.2);
-  -webkit-touch-callout: none;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  z-index: -1 !important;
 }
 ```
+
+**Implementation Summary**:
+- ✅ **Solution 2** (JavaScript-based) - **IMPLEMENTED & WORKING**
+- ✅ **Solution 3** (CSS-based) - **IMPLEMENTED & WORKING**  
+- ❌ **Solution 1** (User settings) - **NOT IMPLEMENTED** (user-dependent)
+
+**Combined Effectiveness**: The current implementation uses **both JavaScript and CSS approaches** (Solutions 2 & 3) which provides **multi-layered protection** against Edge's mini menu.
 
 #### **Popup Persistence Fix**
 
