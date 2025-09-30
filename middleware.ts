@@ -24,6 +24,7 @@ export async function middleware(request: NextRequest) {
       pathname.startsWith("/api/db-viewer") ||
       pathname.startsWith("/api/history") ||
       pathname.startsWith("/api/debug-session") ||
+      pathname.startsWith("/api/autosuggest") ||
       pathname === "/db-viewer.html" ||
       pathname === "/db-viewer") {
     return NextResponse.next();

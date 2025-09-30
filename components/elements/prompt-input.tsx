@@ -40,6 +40,7 @@ export type PromptInputTextareaProps = ComponentProps<typeof Textarea> & {
 
 export const PromptInputTextarea = ({
   onChange,
+  onKeyDown: externalOnKeyDown,
   className,
   placeholder = "What would you like to know?",
   minHeight = 48,
@@ -49,6 +50,15 @@ export const PromptInputTextarea = ({
   ...props
 }: PromptInputTextareaProps) => {
   const handleKeyDown: KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
+    // Call external onKeyDown first (for autosuggest navigation)
+    if (externalOnKeyDown) {
+      externalOnKeyDown(e);
+      // If external handler prevented default or stopped propagation, don't continue
+      if (e.defaultPrevented || e.isPropagationStopped()) {
+        return;
+      }
+    }
+
     if (e.key === "Enter") {
       // Don't submit if IME composition is in progress
       if (e.nativeEvent.isComposing) {
@@ -83,9 +93,7 @@ export const PromptInputTextarea = ({
         className
       )}
       name="message"
-      onChange={(e) => {
-        onChange?.(e);
-      }}
+      onChange={onChange}
       onKeyDown={handleKeyDown}
       placeholder={placeholder}
       {...props}

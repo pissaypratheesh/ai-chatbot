@@ -103,6 +103,15 @@
   pointer-events: auto !important;
 }
 
+/* CRITICAL: Ensure autosuggest is always visible - override all hiding rules */
+[data-autosuggest="true"] {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  z-index: 9999 !important;
+}
+
 /* Ensure sidebar menu items are visible */
 [data-sidebar="menu-item"],
 [data-sidebar="menu-button"],

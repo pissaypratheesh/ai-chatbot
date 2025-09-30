@@ -16,6 +16,7 @@ import {
   useRef,
   useState,
 } from "react";
+import React from "react";
 import { toast } from "sonner";
 import { useLocalStorage, useWindowSize } from "usehooks-ts";
 import { saveChatModelAsCookie } from "@/app/(chat)/actions";
@@ -48,6 +49,8 @@ import { Button } from "./ui/button";
 import type { VisibilityType } from "./visibility-selector";
 import { useQuote } from "./providers/QuoteProvider";
 import { CrossSmallIcon } from "./icons";
+import { useAutosuggest } from "@/hooks/useAutosuggest";
+import { Autosuggest } from "./autosuggest";
 
 function PureMultimodalInput({
   chatId,
@@ -85,6 +88,25 @@ function PureMultimodalInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
   const { quotedText, clearQuote } = useQuote();
+
+  // Autosuggest functionality
+  const {
+    suggestions,
+    isLoading: isAutosuggestLoading,
+    error: autosuggestError,
+    selectedIndex,
+    isVisible: isAutosuggestVisible,
+    handleInput: handleAutosuggestInput,
+    handleClear: handleAutosuggestClear,
+    navigateUp,
+    navigateDown,
+    acceptSuggestion,
+  } = useAutosuggest({
+    minChars: 3,
+    debounceDelay: 500,
+    maxSuggestions: 5,
+  });
+
 
   const adjustHeight = useCallback(() => {
     if (textareaRef.current) {
@@ -126,7 +148,49 @@ function PureMultimodalInput({
   }, [input, setLocalStorageInput]);
 
   const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(event.target.value);
+    const value = event.target.value;
+    setInput(value);
+    handleAutosuggestInput(value);
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Handle autosuggest navigation
+    if (isAutosuggestVisible && suggestions.length > 0) {
+      switch (event.key) {
+        case "ArrowUp":
+          event.preventDefault();
+          navigateUp();
+          return;
+        case "ArrowDown":
+          event.preventDefault();
+          navigateDown();
+          return;
+        case "Enter":
+          if (!event.shiftKey) {
+            const acceptedSuggestion = acceptSuggestion();
+            if (acceptedSuggestion) {
+              event.preventDefault();
+              setInput(acceptedSuggestion);
+              handleAutosuggestClear();
+              return;
+            }
+          }
+          break;
+        case "Escape":
+          event.preventDefault();
+          handleAutosuggestClear();
+          return;
+        case "Tab":
+          const acceptedSuggestion = acceptSuggestion();
+          if (acceptedSuggestion) {
+            event.preventDefault();
+            setInput(acceptedSuggestion);
+            handleAutosuggestClear();
+            return;
+          }
+          break;
+      }
+    }
   };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -162,6 +226,7 @@ function PureMultimodalInput({
     resetHeight();
     setInput("");
     clearQuote(); // Clear quoted text after sending
+    handleAutosuggestClear(); // Clear autosuggest after sending
 
     if (width && width > 768) {
       textareaRef.current?.focus();
@@ -178,6 +243,7 @@ function PureMultimodalInput({
     resetHeight,
     quotedText,
     clearQuote,
+    handleAutosuggestClear,
   ]);
 
   const uploadFile = useCallback(async (file: File) => {
@@ -266,7 +332,7 @@ function PureMultimodalInput({
       />
 
       <PromptInput
-        className="rounded-xl border border-border bg-background p-3 shadow-xs transition-all duration-200 focus-within:border-border hover:border-muted-foreground/50"
+        className="relative rounded-xl border border-border bg-background p-3 shadow-xs transition-all duration-200 focus-within:border-border hover:border-muted-foreground/50"
         onSubmit={(event) => {
           event.preventDefault();
           if (status !== "ready") {
@@ -332,6 +398,7 @@ function PureMultimodalInput({
             </div>
           </div>
         )}
+        
         <div className="flex flex-row items-start gap-1 sm:gap-2">
           <PromptInputTextarea
             autoFocus
@@ -341,6 +408,7 @@ function PureMultimodalInput({
             maxHeight={200}
             minHeight={44}
             onChange={handleInput}
+            onKeyDown={handleKeyDown}
             placeholder="Send a message..."
             ref={textareaRef}
             rows={1}
@@ -374,6 +442,22 @@ function PureMultimodalInput({
           )}
         </PromptInputToolbar>
       </PromptInput>
+      
+      {/* Autosuggest positioned just above the text input */}
+      <Autosuggest
+        suggestions={suggestions}
+        isLoading={isAutosuggestLoading}
+        error={autosuggestError}
+        selectedIndex={selectedIndex}
+        isVisible={isAutosuggestVisible}
+        onSelect={(suggestion) => {
+          setInput(suggestion.text);
+          handleAutosuggestClear();
+        }}
+        onNavigateUp={navigateUp}
+        onNavigateDown={navigateDown}
+        className="absolute bottom-16 left-0 right-0 z-[9999]"
+      />
     </div>
   );
 }

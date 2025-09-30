@@ -245,3 +245,5 @@
 2025-09-30 16:44:25.005 IST [19559] LOG:  checkpoint complete: wrote 9 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.815 s, sync=0.002 s, total=0.822 s; sync files=8, longest=0.001 s, average=0.001 s; distance=24 kB, estimate=165 kB; lsn=0/16C2EE8, redo lsn=0/16C2E58
 2025-09-30 16:59:24.024 IST [19559] LOG:  checkpoint starting: time
 2025-09-30 16:59:24.230 IST [19559] LOG:  checkpoint complete: wrote 2 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.204 s, sync=0.001 s, total=0.207 s; sync files=1, longest=0.001 s, average=0.001 s; distance=3 kB, estimate=149 kB; lsn=0/16C3E10, redo lsn=0/16C3DB8
+2025-09-30 21:06:27.470 IST [19559] LOG:  checkpoint starting: time
+2025-09-30 21:06:28.902 IST [19559] LOG:  checkpoint complete: wrote 15 buffers (0.1%); 0 WAL file(s) added, 0 removed, 0 recycled; write=1.426 s, sync=0.002 s, total=1.434 s; sync files=13, longest=0.001 s, average=0.001 s; distance=33 kB, estimate=137 kB; lsn=0/16CC400, redo lsn=0/16CC3A8
