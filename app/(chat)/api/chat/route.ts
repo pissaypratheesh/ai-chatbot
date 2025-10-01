@@ -101,11 +101,13 @@ export async function POST(request: Request) {
       message,
       selectedChatModel,
       selectedVisibilityType,
+      selectedCelebrityPersona,
     }: {
       id: string;
       message: ChatMessage;
       selectedChatModel: ChatModel["id"];
       selectedVisibilityType: VisibilityType;
+      selectedCelebrityPersona?: string;
     } = requestBody;
 
     const session = await auth();
