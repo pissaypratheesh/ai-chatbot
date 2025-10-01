@@ -34,6 +34,7 @@ import { toast } from "./toast";
 import { DEFAULT_CELEBRITY_PERSONA } from "@/lib/celebrity-personas";
 import type { CelebrityPersona } from "@/lib/celebrity-personas";
 import { QuoteProvider } from "./providers/QuoteProvider";
+import type { VisibilityType } from "@/components/visibility-selector";
 
 export function Chat({
   id,

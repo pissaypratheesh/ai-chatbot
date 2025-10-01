@@ -69,19 +69,10 @@ function PersonaSelectorCompact({
   return (
     <PromptInputModelSelect
       onValueChange={(personaName) => {
-        console.log("PersonaSelectorCompact Debug:", {
-          personaName,
-          availablePersonas: celebrityPersonas.map(p => ({ id: p.id, name: p.name })),
-          foundPersona: celebrityPersonas.find((p) => p.name === personaName)
-        });
-        
         const persona = celebrityPersonas.find((p) => p.name === personaName);
         if (persona) {
-          console.log("Setting persona:", persona);
           setOptimisticPersona(persona);
           onPersonaChange?.(persona);
-        } else {
-          console.error("Persona not found for name:", personaName);
         }
       }}
       value={optimisticPersona?.name}

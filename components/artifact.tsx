@@ -18,6 +18,7 @@ import { sheetArtifact } from "@/artifacts/sheet/client";
 import { textArtifact } from "@/artifacts/text/client";
 import { useArtifact } from "@/hooks/use-artifact";
 import type { Document, Vote } from "@/lib/db/schema";
+import { DEFAULT_CELEBRITY_PERSONA } from "@/lib/celebrity-personas";
 import type { Attachment, ChatMessage } from "@/lib/types";
 import { fetcher } from "@/lib/utils";
 import { ArtifactActions } from "./artifact-actions";
@@ -338,6 +339,7 @@ function PureArtifact({
                     input={input}
                     messages={messages}
                     selectedModelId={selectedModelId}
+                    selectedPersona={DEFAULT_CELEBRITY_PERSONA}
                     selectedVisibilityType={selectedVisibilityType}
                     sendMessage={sendMessage}
                     setAttachments={setAttachments}
