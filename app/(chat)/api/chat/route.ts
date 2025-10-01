@@ -110,6 +110,7 @@ export async function POST(request: Request) {
       selectedCelebrityPersona?: string;
     } = requestBody;
 
+
     const session = await auth();
 
     if (!session?.user) {
@@ -186,6 +187,7 @@ export async function POST(request: Request) {
         } else {
           systemPromptText = systemPrompt({ selectedChatModel, requestHints });
         }
+
 
         const result = streamText({
           model: myProvider.languageModel(selectedChatModel),

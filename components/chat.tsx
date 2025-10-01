@@ -65,6 +65,17 @@ export function Chat({
   const [showCreditCardAlert, setShowCreditCardAlert] = useState(false);
   const [currentModelId, setCurrentModelId] = useState(initialChatModel);
   const [selectedPersona, setSelectedPersona] = useState<CelebrityPersona>(DEFAULT_CELEBRITY_PERSONA);
+  const selectedPersonaRef = useRef(selectedPersona);
+  
+  // Keep ref in sync with state
+  useEffect(() => {
+    selectedPersonaRef.current = selectedPersona;
+  }, [selectedPersona]);
+  
+  // Wrapper function for persona changes
+  const handlePersonaChange = (persona: CelebrityPersona) => {
+    setSelectedPersona(persona);
+  };
   const currentModelIdRef = useRef(currentModelId);
 
   useEffect(() => {
@@ -88,13 +99,14 @@ export function Chat({
       api: "/api/chat",
       fetch: fetchWithErrorHandlers,
       prepareSendMessagesRequest(request) {
+        
         return {
           body: {
             id: request.id,
             message: request.messages.at(-1),
             selectedChatModel: currentModelIdRef.current,
             selectedVisibilityType: visibilityType,
-            selectedCelebrityPersona: selectedPersona.id,
+            selectedCelebrityPersona: selectedPersonaRef.current.id,
             ...request.body,
           },
         };
@@ -187,7 +199,7 @@ export function Chat({
               input={input}
               messages={messages}
               onModelChange={setCurrentModelId}
-              onPersonaChange={setSelectedPersona}
+              onPersonaChange={handlePersonaChange}
               selectedModelId={currentModelId}
               selectedPersona={selectedPersona}
               selectedVisibilityType={visibilityType}

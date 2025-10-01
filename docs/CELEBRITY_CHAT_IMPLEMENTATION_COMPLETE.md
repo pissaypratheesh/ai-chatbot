@@ -2,7 +2,7 @@
 
 ## 🎯 Overview
 
-This document describes the **complete implementation** of the celebrity chat feature for the AI chatbot. Users can now chat with different celebrity personas, each with unique personalities, speaking styles, and expertise areas. The implementation has been **consolidated into the main chat interface** for a unified user experience.
+This document describes the **complete implementation** of the celebrity chat feature for the AI chatbot. Users can now chat with different celebrity personas, each with unique personalities, speaking styles, and expertise areas. The implementation has been **fully consolidated into the main chat interface** for a unified user experience, eliminating the need for separate routes.
 
 ## ✅ What's Implemented
 
@@ -18,9 +18,11 @@ This document describes the **complete implementation** of the celebrity chat fe
 ### Key Features
 - ✅ **9 Celebrity Personas**: AI Default, Elon Musk, Oprah Winfrey, Steve Jobs, Marie Curie, Leonardo da Vinci, Albert Einstein, Frida Kahlo, Nelson Mandela
 - ✅ **Authentic Responses**: Each persona responds in their unique style and expertise
-- ✅ **Unified Interface**: Celebrity personas integrated into main chat interface
-- ✅ **Persona Selector**: Dropdown in main chat toolbar for easy persona switching
+- ✅ **Unified Interface**: Celebrity personas fully integrated into main chat interface
+- ✅ **Persona Selector**: Compact dropdown in main chat input area for easy persona switching
 - ✅ **AI Default**: Standard AI assistant behavior as default option
+- ✅ **Single Route**: All functionality accessible through main `/chat` route
+- ✅ **State Management**: Fixed stale closure issue with persona selection
 - ✅ **Type Safety**: Full TypeScript support with proper error handling
 - ✅ **Build Success**: Project builds without errors
 - ✅ **API Integration**: Celebrity personas work through main chat API
@@ -33,47 +35,48 @@ graph TD
     A[AppSidebar] --> B[SidebarWithSearch]
     B --> C[Main Chat Link]
     C --> D[Chat Component]
-    D --> E[PersonaSelectorCompact]
-    D --> F[Messages Component]
-    D --> G[MultimodalInput]
+    D --> E[MultimodalInput]
+    E --> F[PersonaSelectorCompact]
+    E --> G[ModelSelectorCompact]
+    D --> H[Messages Component]
     
-    E --> H[Persona Dropdown]
-    H --> I[Persona Selection]
-    I --> J[State Management]
+    F --> I[Persona Dropdown]
+    I --> J[Persona Selection]
+    J --> K[State Management with Refs]
     
-    D --> K[useChat Hook]
-    K --> L[Main Chat API Route]
-    L --> M[AI Provider]
-    M --> N[Celebrity System Prompt]
+    D --> L[useChat Hook]
+    L --> M[Main Chat API Route]
+    M --> N[AI Provider]
+    N --> O[Dynamic System Prompt]
     
     style A fill:#e1f5fe
     style D fill:#f3e5f5
-    style E fill:#e8f5e8
-    style L fill:#fff3e0
-    style N fill:#ffebee
+    style F fill:#e8f5e8
+    style M fill:#fff3e0
+    style O fill:#ffebee
 ```
 
 ### Data Flow
 ```mermaid
 sequenceDiagram
     participant U as User
-    participant CS as CelebrityPersonaSelector
-    participant CC as CelebrityChat
-    participant API as Celebrity API
+    participant PS as PersonaSelectorCompact
+    participant C as Chat Component
+    participant API as Main Chat API
     participant AI as AI Provider
     participant DB as Database
     
-    U->>CS: Selects celebrity persona
-    CS->>CC: Updates persona state
-    CS->>CS: Saves to cookie
+    U->>PS: Selects celebrity persona
+    PS->>C: Updates persona state via ref
+    C->>C: State updates with useEffect
     
-    U->>CC: Types message
-    CC->>API: Sends message with persona
-    API->>AI: Generates response with persona prompt
+    U->>C: Types message
+    C->>API: Sends message with persona ID
+    API->>AI: Generates response with dynamic persona prompt
     AI->>API: Returns celebrity-style response
     API->>DB: Saves message
-    API->>CC: Streams response
-    CC->>U: Shows celebrity response
+    API->>C: Streams response
+    C->>U: Shows celebrity response
 ```
 
 ## 📁 File Structure
@@ -82,22 +85,21 @@ sequenceDiagram
 ```
 lib/
 └── celebrity-personas.ts              ✅ Celebrity persona definitions and prompts
-
-app/celebrity-chat/
-├── page.tsx                          ✅ Main celebrity chat page
-├── [id]/page.tsx                     ✅ Individual celebrity chat sessions
-└── api/chat/
-    ├── route.ts                      ✅ Celebrity chat API endpoint
-    └── schema.ts                     ✅ API request/response schemas
-
-components/
-├── celebrity-chat.tsx                ✅ Main celebrity chat component
-└── celebrity-persona-selector.tsx    ✅ Persona dropdown selector
 ```
 
 ### Modified Files
 ```
-components/sidebar-with-search.tsx     ✅ Added celebrity chat link
+components/
+├── chat.tsx                           ✅ Added persona state management with refs
+├── multimodal-input.tsx               ✅ Added PersonaSelectorCompact component
+└── sidebar-with-search.tsx            ✅ Removed separate celebrity chat link
+
+app/(chat)/api/chat/
+├── route.ts                           ✅ Added persona handling to main API
+└── schema.ts                          ✅ Added selectedCelebrityPersona field
+
+lib/ai/
+└── entitlements.ts                    ✅ Increased rate limits for testing
 ```
 
 ## 🔧 Implementation Details
@@ -130,114 +132,136 @@ export const celebrityPersonas: CelebrityPersona[] = [
 ];
 ```
 
-### Celebrity Chat Component
-**File**: `components/celebrity-chat.tsx`
+### Main Chat Component Integration
+**File**: `components/chat.tsx`
 
 ```typescript
-export function CelebrityChat({
-  id,
-  initialMessages,
-  initialChatModel,
-  initialVisibilityType,
-  isReadonly,
-  autoResume,
-  initialLastContext,
-  initialCelebrityPersona,
-}: {
-  id: string;
-  initialMessages: ChatMessage[];
-  initialChatModel: string;
-  initialVisibilityType: VisibilityType;
-  isReadonly: boolean;
-  autoResume: boolean;
-  initialLastContext?: AppUsage;
-  initialCelebrityPersona: string;
-}) {
-  // Uses existing useChat hook with celebrity API endpoint
+export function Chat({ ... }) {
+  const [selectedPersona, setSelectedPersona] = useState<CelebrityPersona>(DEFAULT_CELEBRITY_PERSONA);
+  const selectedPersonaRef = useRef(selectedPersona);
+  
+  // Keep ref in sync with state
+  useEffect(() => {
+    selectedPersonaRef.current = selectedPersona;
+  }, [selectedPersona]);
+  
+  // Wrapper function for persona changes
+  const handlePersonaChange = (persona: CelebrityPersona) => {
+    setSelectedPersona(persona);
+  };
+
   const { messages, sendMessage, status } = useChat<ChatMessage>({
-    id,
-    messages: initialMessages,
     transport: new DefaultChatTransport({
-      api: "/celebrity-chat/api/chat", // Points to celebrity API
-      // ... other config
+      api: "/api/chat", // Main chat API
+      prepareSendMessagesRequest(request) {
+        return {
+          body: {
+            ...request.body,
+            selectedCelebrityPersona: selectedPersonaRef.current.id, // Use ref for current value
+          },
+        };
+      },
     }),
   });
 
-  // Celebrity persona selector
   return (
-    <div className="flex h-dvh min-w-0 flex-col bg-background">
-      <CelebrityPersonaSelector
-        selectedPersonaId={currentCelebrityPersona}
-        onPersonaChange={setCurrentCelebrityPersona}
-        disabled={status === "submitted"}
-      />
-      {/* Rest of chat interface */}
-    </div>
+    <QuoteProvider>
+      <div className="flex h-dvh min-w-0 flex-col bg-background">
+        {/* Chat interface with persona selector in MultimodalInput */}
+        <MultimodalInput
+          selectedPersona={selectedPersona}
+          onPersonaChange={handlePersonaChange}
+          // ... other props
+        />
+      </div>
+    </QuoteProvider>
   );
 }
 ```
 
-### Celebrity Persona Selector
-**File**: `components/celebrity-persona-selector.tsx`
+### Persona Selector Compact Component
+**File**: `components/multimodal-input.tsx`
 
 ```typescript
-export function CelebrityPersonaSelector({
-  selectedPersonaId,
+function PersonaSelectorCompact({
+  selectedPersona,
   onPersonaChange,
-  disabled,
 }: {
-  selectedPersonaId: string;
-  onPersonaChange: (personaId: string) => void;
-  disabled?: boolean;
+  selectedPersona: CelebrityPersona;
+  onPersonaChange?: (persona: CelebrityPersona) => void;
 }) {
+  const [optimisticPersona, setOptimisticPersona] = useState(selectedPersona);
+
+  useEffect(() => {
+    setOptimisticPersona(selectedPersona);
+  }, [selectedPersona]);
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" disabled={disabled}>
-          {selectedPersona?.name || "Select Celebrity"}
-          <ChevronDownIcon />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        {celebrityPersonas.map((persona) => (
-          <DropdownMenuItem
-            key={persona.id}
-            onSelect={() => {
-              onPersonaChange(persona.id);
-              saveCelebrityPersonaAsCookie(persona.id);
-            }}
-          >
-            <div>
-              <div className="font-medium">{persona.name}</div>
-              <div className="text-sm text-muted-foreground">
-                {persona.description}
+    <PromptInputModelSelect
+      onValueChange={(personaName) => {
+        const persona = celebrityPersonas.find((p) => p.name === personaName);
+        if (persona) {
+          setOptimisticPersona(persona);
+          onPersonaChange?.(persona);
+        }
+      }}
+      value={optimisticPersona?.name}
+    >
+      <Trigger className="flex h-8 items-center gap-2 rounded-lg border-0 bg-background px-2 text-foreground shadow-none transition-colors hover:bg-accent focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0" type="button">
+        <span className="text-sm">{optimisticPersona?.avatar}</span>
+        <span className="hidden font-medium text-xs sm:block">
+          {optimisticPersona?.name}
+        </span>
+        <ChevronDownIcon size={16} />
+      </Trigger>
+      <PromptInputModelSelectContent className="min-w-[260px] p-0">
+        <div className="flex flex-col gap-px">
+          {celebrityPersonas.map((persona) => (
+            <SelectItem key={persona.id} value={persona.name}>
+              <div className="flex items-center gap-2">
+                <span className="text-sm">{persona.avatar}</span>
+                <div>
+                  <div className="truncate font-medium text-xs">{persona.name}</div>
+                  <div className="mt-px truncate text-[10px] text-muted-foreground leading-tight">
+                    {persona.description}
+                  </div>
+                </div>
               </div>
-            </div>
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+            </SelectItem>
+          ))}
+        </div>
+      </PromptInputModelSelectContent>
+    </PromptInputModelSelect>
   );
 }
 ```
 
-### Celebrity Chat API
-**File**: `app/celebrity-chat/api/chat/route.ts`
+### Main Chat API Integration
+**File**: `app/(chat)/api/chat/route.ts`
 
 ```typescript
 export async function POST(request: Request) {
-  const { selectedCelebrityPersona, message, ...otherData } = await request.json();
+  const {
+    id,
+    message,
+    selectedChatModel,
+    selectedVisibilityType,
+    selectedCelebrityPersona, // New field
+  } = await request.json();
   
-  // Get celebrity persona and generate system prompt
-  const celebrityPersona = getCelebrityPersonaById(selectedCelebrityPersona);
-  const celebritySystemPrompt = celebrityPersona 
-    ? generateCelebritySystemPrompt(celebrityPersona)
-    : "You are a helpful assistant.";
+  // Determine system prompt based on celebrity persona
+  let systemPromptText: string;
+  if (selectedCelebrityPersona && selectedCelebrityPersona !== "ai-default") {
+    const persona = getCelebrityPersonaById(selectedCelebrityPersona);
+    systemPromptText = persona ? generateCelebritySystemPrompt(persona) : systemPrompt({ selectedChatModel, requestHints });
+  } else {
+    systemPromptText = systemPrompt({ selectedChatModel, requestHints });
+  }
 
-  // Use AI provider with celebrity system prompt
+  // Use AI provider with dynamic system prompt
   const result = streamText({
     model: myProvider.languageModel(selectedChatModel),
-    system: celebritySystemPrompt, // Celebrity-specific prompt
+    system: systemPromptText, // Dynamic prompt based on persona
     messages: convertToModelMessages(uiMessages),
     // ... other config
   });
@@ -320,19 +344,19 @@ Remember: You are ${persona.name}. Stay in character throughout the conversation
 ## 🚀 How It Works
 
 ### User Interaction Flow
-1. **User navigates** to `/celebrity-chat`
-2. **Persona selector** appears with default celebrity (Elon Musk)
+1. **User navigates** to `/chat` (main chat interface)
+2. **Persona selector** appears in the input area with "AI Default" pre-selected
 3. **User selects** different celebrity from dropdown
-4. **Selection saved** to cookie for persistence
+4. **State updates** via refs to avoid stale closure issues
 5. **User types** message in chat input
-6. **Message sent** to celebrity API with selected persona
+6. **Message sent** to main chat API with selected persona ID
 7. **AI generates** response using celebrity's system prompt
 8. **Response streamed** back with celebrity's personality and style
 9. **Conversation continues** with celebrity context maintained
 
 ### API Request Flow
 ```typescript
-// Request to /api/celebrity-chat/chat
+// Request to /api/chat (main API)
 {
   "id": "chat-uuid",
   "message": {
@@ -342,7 +366,7 @@ Remember: You are ${persona.name}. Stay in character throughout the conversation
   },
   "selectedChatModel": "chat-model",
   "selectedVisibilityType": "private",
-  "selectedCelebrityPersona": "elon-musk"
+  "selectedCelebrityPersona": "elon-musk" // New field
 }
 
 // Response: Streamed AI response with Elon Musk's personality
@@ -357,10 +381,10 @@ Remember: You are ${persona.name}. Stay in character throughout the conversation
 ## 🧪 Testing the Implementation
 
 ### Manual Testing
-1. **Navigate to celebrity chat**: Visit `http://localhost:3000/celebrity-chat`
-2. **Select different personas**: Use dropdown to switch between celebrities
+1. **Navigate to main chat**: Visit `http://localhost:3000/chat`
+2. **Select different personas**: Use dropdown in input area to switch between celebrities
 3. **Test conversations**: Chat with each persona to verify authentic responses
-4. **Verify persistence**: Refresh page and confirm selected persona is remembered
+4. **Verify state management**: Check that persona selection persists during conversation
 5. **Test chat history**: Create multiple chats and verify they're saved
 
 ### API Testing
@@ -373,11 +397,11 @@ node -e "const { generateCelebritySystemPrompt, getCelebrityPersonaById } = requ
 ```
 
 ### Expected Behavior
-- ✅ **Persona Selection**: Dropdown shows all 8 celebrities with descriptions
+- ✅ **Persona Selection**: Dropdown shows all 9 personas (including AI Default) with descriptions
 - ✅ **Authentic Responses**: Each persona responds in their unique style
-- ✅ **Persistent Selection**: Selected persona remembered across sessions
+- ✅ **State Management**: Persona selection works correctly without stale closure issues
 - ✅ **Chat History**: Conversations saved and retrievable
-- ✅ **Route Separation**: `/celebrity-chat` doesn't affect existing `/chat`
+- ✅ **Unified Interface**: All functionality accessible through main `/chat` route
 - ✅ **Build Success**: Project builds without TypeScript errors
 
 ## 🔄 Integration with Existing System
@@ -391,21 +415,19 @@ node -e "const { generateCelebritySystemPrompt, getCelebrityPersonaById } = requ
 
 ### Route Structure
 ```
-/chat                    # Existing chat functionality (unchanged)
-/celebrity-chat          # New celebrity chat functionality
-/celebrity-chat/[id]     # Individual celebrity chat sessions
+/chat                    # Main chat functionality with persona support
+/chat/[id]              # Individual chat sessions with persona context
 ```
 
 ### API Endpoints
 ```
-/api/chat                # Existing chat API (unchanged)
-/api/celebrity-chat/chat # New celebrity chat API
+/api/chat                # Main chat API with persona support
 ```
 
 ### Database Schema
 - **No Changes**: Uses existing `Chat` and `Message_v2` tables
 - **Backward Compatible**: Existing chats continue to work normally
-- **Celebrity Context**: Persona information stored in chat metadata
+- **Persona Context**: Persona information passed in API requests
 
 ## 📊 Performance Considerations
 
@@ -501,13 +523,20 @@ const response = await fetch('/api/celebrity-chat/chat', {
 
 The celebrity chat feature is now fully implemented and ready for use. Users can:
 
-1. **Navigate** to `/celebrity-chat` to start chatting with celebrities
-2. **Select** from 8 different celebrity personas
+1. **Navigate** to `/chat` to start chatting with celebrities
+2. **Select** from 9 different personas (including AI Default)
 3. **Chat** with authentic celebrity responses
-4. **Enjoy** persistent persona selection across sessions
+4. **Enjoy** seamless persona switching during conversations
 5. **Access** full chat history and functionality
 
-The implementation maintains the existing chat interface's look and feel while adding rich celebrity persona functionality. All existing functionality remains unchanged, ensuring a seamless user experience.
+The implementation maintains the existing chat interface's look and feel while adding rich celebrity persona functionality. All existing functionality remains unchanged, ensuring a seamless user experience. The consolidation eliminates the need for separate routes and provides a unified interface for all chat interactions.
+
+### Key Technical Achievements
+- ✅ **Stale Closure Fix**: Resolved persona selection state management issues
+- ✅ **Unified Interface**: Consolidated all functionality into main chat
+- ✅ **Type Safety**: Full TypeScript support throughout
+- ✅ **Performance**: Efficient state management with refs
+- ✅ **User Experience**: Seamless persona switching without page reloads
 
 ---
 
