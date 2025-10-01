@@ -58,6 +58,362 @@ middleware.ts                        # Authentication bypass configuration
 - ✅ TypeScript type safety with proper error responses
 - ✅ Middleware bypass for API endpoints
 
+## 🔄 Code Flow Diagrams
+
+This section provides comprehensive Mermaid diagrams showing the flow of the Tic Tac Toe implementation, covering all major aspects of the game logic, AI integration, and error handling.
+
+### **1. Overall Game Architecture Flow**
+
+```mermaid
+graph TD
+    A[User visits /tic-tac-toe] --> B[TicTacToe Component Loads]
+    B --> C[Initialize Game State]
+    C --> D[Render Game Board]
+    D --> E{Game Mode?}
+    
+    E -->|Human vs Human| F[Two Player Mode]
+    E -->|Human vs AI| G[AI Mode]
+    
+    F --> H[Player X Move]
+    H --> I[Check Win/Draw]
+    I -->|Game Over| J[Display Result]
+    I -->|Continue| K[Player O Move]
+    K --> I
+    
+    G --> L[Player X Move]
+    L --> M[Check Win/Draw]
+    M -->|Game Over| J
+    M -->|Continue| N[AI Move API Call]
+    N --> O[AI Strategic Analysis]
+    O --> P[AI Move Response]
+    P --> Q[Update Board with AI Move]
+    Q --> M
+    
+    J --> R[Reset Game Option]
+    R --> C
+    
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5
+    style N fill:#fff3e0
+    style O fill:#ffebee
+```
+
+### **2. Game State Management Flow**
+
+```mermaid
+stateDiagram-v2
+    [*] --> InitialState: Game Start
+    
+    InitialState --> PlayerXTurn: Initialize Board
+    PlayerXTurn --> CheckWin: Player X Move
+    PlayerXTurn --> CheckDraw: Player X Move
+    
+    CheckWin --> GameOver: Winner Found
+    CheckDraw --> GameOver: Board Full
+    CheckWin --> PlayerOTurn: No Winner
+    CheckDraw --> PlayerOTurn: Not Full
+    
+    PlayerOTurn --> CheckWin: Player O Move
+    PlayerOTurn --> CheckDraw: Player O Move
+    
+    CheckWin --> GameOver: Winner Found
+    CheckDraw --> GameOver: Board Full
+    CheckWin --> PlayerXTurn: No Winner
+    CheckDraw --> PlayerXTurn: Not Full
+    
+    GameOver --> [*]: Reset Game
+    
+    note right of PlayerXTurn
+        Board: [X, null, null, ...]
+        Current Player: X
+        Winner: null
+    end note
+    
+    note right of PlayerOTurn
+        Board: [X, O, null, ...]
+        Current Player: O
+        Winner: null
+    end note
+    
+    note right of GameOver
+        Board: [X, O, X, O, X, O, X, O, X]
+        Winner: X or O or Draw
+        Game Over: true
+    end note
+```
+
+### **3. AI Move Generation Flow**
+
+```mermaid
+flowchart TD
+    A[AI Turn Triggered] --> B[Set Loading State]
+    B --> C[Prepare API Request]
+    C --> D[POST /api/tic-tac-toe/ai-move]
+    
+    D --> E[Validate Input]
+    E -->|Invalid| F[Return 400 Error]
+    E -->|Valid| G[Check Game State]
+    
+    G -->|Game Over| H[Return move: null]
+    G -->|Game Active| I[Get Available Moves]
+    
+    I --> J[Generate AI Prompt]
+    J --> K[Call OpenAI GPT-4o]
+    K --> L[Parse AI Response]
+    
+    L -->|Valid Move| M[Return AI Move]
+    L -->|Invalid/Error| N[Fallback to Strategic Algorithm]
+    
+    N --> O[Try to Win]
+    O -->|Can Win| P[Return Winning Move]
+    O -->|Cannot Win| Q[Block Opponent]
+    
+    Q -->|Can Block| R[Return Blocking Move]
+    Q -->|Cannot Block| S[Take Center]
+    
+    S -->|Center Available| T[Return Center Move]
+    S -->|Center Taken| U[Take Corner]
+    
+    U -->|Corner Available| V[Return Corner Move]
+    U -->|No Corner| W[Return Any Available Move]
+    
+    M --> X[Update Game State]
+    P --> X
+    R --> X
+    T --> X
+    V --> X
+    W --> X
+    
+    X --> Y[Clear Loading State]
+    Y --> Z[Continue Game]
+    
+    F --> AA[Handle Error]
+    H --> AA
+    AA --> Y
+    
+    style A fill:#e1f5fe
+    style K fill:#fff3e0
+    style N fill:#ffebee
+    style X fill:#e8f5e8
+```
+
+### **4. Win Detection Algorithm Flow**
+
+```mermaid
+flowchart TD
+    A[Check Winner Function] --> B[Define Winning Combinations]
+    B --> C[8 Winning Patterns]
+    
+    C --> D["Rows: 0,1,2 / 3,4,5 / 6,7,8"]
+    C --> E["Columns: 0,3,6 / 1,4,7 / 2,5,8"]
+    C --> F["Diagonals: 0,4,8 / 2,4,6"]
+    
+    D --> G[Iterate Through Combinations]
+    E --> G
+    F --> G
+    
+    G --> H[Check Each Combination]
+    H --> I{All Three Cells Same?}
+    
+    I -->|Yes| J{Which Player?}
+    I -->|No| K[Next Combination]
+    
+    J -->|X| L[Return X Winner]
+    J -->|O| M[Return O Winner]
+    
+    K --> N{More Combinations?}
+    N -->|Yes| H
+    N -->|No| O[Return null - No Winner]
+    
+    L --> P[Game Over - X Wins]
+    M --> Q[Game Over - O Wins]
+    O --> R[Continue Game]
+    
+    style A fill:#e1f5fe
+    style J fill:#fff3e0
+    style L fill:#e8f5e8
+    style M fill:#e8f5e8
+    style O fill:#ffebee
+```
+
+### **5. Strategic AI Algorithm Flow**
+
+```mermaid
+flowchart TD
+    A[Strategic Move Function] --> B[Get Available Moves]
+    B --> C[Strategy 1: Try to Win]
+    
+    C --> D[Test Each Available Move]
+    D --> E[Simulate O in Position]
+    E --> F{Check Winner = O?}
+    
+    F -->|Yes| G[Return Winning Move]
+    F -->|No| H[Strategy 2: Block Opponent]
+    
+    H --> I[Test Each Available Move]
+    I --> J[Simulate X in Position]
+    J --> K{Check Winner = X?}
+    
+    K -->|Yes| L[Return Blocking Move]
+    K -->|No| M[Strategy 3: Take Center]
+    
+    M --> N{Center Position 4 Available?}
+    N -->|Yes| O[Return Center Move]
+    N -->|No| P[Strategy 4: Take Corners]
+    
+    P --> Q[Check Corner Positions: 0,2,6,8]
+    Q --> R{Any Corner Available?}
+    
+    R -->|Yes| S[Return First Available Corner]
+    R -->|No| T[Strategy 5: Take Any Move]
+    
+    T --> U[Return First Available Move]
+    
+    G --> V[Update Board with Strategic Move]
+    L --> V
+    O --> V
+    S --> V
+    U --> V
+    
+    style A fill:#e1f5fe
+    style C fill:#fff3e0
+    style H fill:#fff3e0
+    style M fill:#fff3e0
+    style P fill:#fff3e0
+    style T fill:#fff3e0
+    style V fill:#e8f5e8
+```
+
+### **6. API Request/Response Flow**
+
+```mermaid
+sequenceDiagram
+    participant Frontend as TicTacToe Component
+    participant API as /api/tic-tac-toe/ai-move
+    participant AI as OpenAI GPT-4o
+    participant Strategy as Strategic Algorithm
+    
+    Frontend->>API: POST Request
+    Note over Frontend,API: {board: [...], player: "O"}
+    
+    API->>API: Validate Input
+    API->>API: Check Game State
+    API->>API: Get Available Moves
+    
+    API->>AI: Generate Move Prompt
+    Note over API,AI: Board state + strategic rules
+    
+    AI-->>API: JSON Response
+    Note over API,AI: {move: 4, reasoning: "..."}
+    
+    alt AI Response Valid
+        API-->>Frontend: Success Response
+        Note over API,Frontend: {move: 4, reasoning: "..."}
+    else AI Response Invalid/Error
+        API->>Strategy: Fallback Algorithm
+        Strategy-->>API: Strategic Move
+        API-->>Frontend: Fallback Response
+        Note over API,Frontend: {move: 4, reasoning: "Fallback strategic move"}
+    end
+    
+    Frontend->>Frontend: Update Game State
+    Frontend->>Frontend: Check Win/Draw
+    Frontend->>Frontend: Switch to Player X
+```
+
+### **7. Component Lifecycle Flow**
+
+```mermaid
+flowchart TD
+    A[Component Mount] --> B[Initialize State]
+    B --> C[Set Initial Game State]
+    C --> D[Render Game Board]
+    
+    D --> E[User Interaction]
+    E --> F{Action Type?}
+    
+    F -->|Cell Click| G[handleCellClick]
+    F -->|Mode Switch| H[Switch Game Mode]
+    F -->|Reset Game| I[resetGame]
+    
+    G --> J[Validate Move]
+    J -->|Valid| K[Update Board]
+    J -->|Invalid| L[Ignore Click]
+    
+    K --> M[Check Win/Draw]
+    M -->|Game Over| N[Display Result]
+    M -->|Continue| O{AI Mode?}
+    
+    O -->|Yes| P[makeAIMove]
+    O -->|No| Q[Switch Player]
+    
+    P --> R[API Call]
+    R --> S[Update with AI Move]
+    S --> M
+    
+    Q --> E
+    H --> I
+    I --> C
+    N --> R2[Show Reset Button]
+    R2 --> I
+    
+    L --> E
+    
+    style A fill:#e1f5fe
+    style P fill:#fff3e0
+    style R fill:#ffebee
+    style N fill:#e8f5e8
+```
+
+### **8. Error Handling Flow**
+
+```mermaid
+flowchart TD
+    A[Error Occurs] --> B{Error Type?}
+    
+    B -->|API Error| C[Network/Server Error]
+    B -->|AI Error| D[OpenAI Response Error]
+    B -->|Validation Error| E[Input Validation Error]
+    B -->|Game Logic Error| F[Game State Error]
+    
+    C --> G[Log Error]
+    G --> H[Fallback to Random Move]
+    H --> I[Continue Game]
+    
+    D --> J[Log AI Error]
+    J --> K[Use Strategic Algorithm]
+    K --> L[Return Strategic Move]
+    L --> I
+    
+    E --> M[Return 400 Error]
+    M --> N[Display Error Message]
+    
+    F --> O[Log Game Error]
+    O --> P[Reset Game State]
+    P --> Q[Show Error Message]
+    
+    style A fill:#ffebee
+    style H fill:#fff3e0
+    style K fill:#fff3e0
+    style M fill:#ffebee
+    style P fill:#ffebee
+```
+
+### **Diagram Summary**
+
+These diagrams comprehensively show the flow of the Tic Tac Toe implementation, covering:
+
+1. **Overall Architecture** - How the game components interact
+2. **State Management** - Game state transitions
+3. **AI Move Generation** - Complete AI decision-making process
+4. **Win Detection** - Algorithm for determining winners
+5. **Strategic AI** - Fallback algorithm when AI fails
+6. **API Flow** - Request/response sequence
+7. **Component Lifecycle** - React component behavior
+8. **Error Handling** - Comprehensive error management
+
+The implementation demonstrates a robust, well-architected game with intelligent AI integration and comprehensive error handling! 🎮
+
 ## 🔧 Technical Architecture
 
 ### Game State Management
