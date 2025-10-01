@@ -12,15 +12,17 @@ lib/
 │   └── autosuggestService.ts         # Real API service implementation
 ├── config/
 │   └── autosuggestConfig.ts          # Service configuration
+├── ai/
+│   └── autosuggest.ts                # AI suggestion generation
 └── hooks/
     └── useAutosuggest.ts             # Autosuggest hook using services
 
 app/api/
 └── autosuggest/
-    └── route.ts                      # Autosuggest API endpoint (to be implemented)
+    └── route.ts                      # Autosuggest API endpoint (implemented)
 
 components/
-├── autosuggest.tsx                   # UI component with portal support
+├── autosuggest.tsx                   # UI component with absolute positioning
 └── multimodal-input.tsx              # Main input component with autosuggest integration
 ```
 
@@ -68,7 +70,7 @@ AutosuggestServiceFactory.switchToRealService();
 ### ✅ Completed Implementation
 
 #### Frontend Components
-- ✅ `Autosuggest` component with portal support and keyboard navigation
+- ✅ `Autosuggest` component with absolute positioning and keyboard navigation
 - ✅ `useAutosuggest` hook with debouncing and request cancellation
 - ✅ `MultimodalInput` integration with autosuggest functionality
 - ✅ Service factory pattern for easy switching
@@ -170,40 +172,109 @@ interface AutosuggestResult {
 
 ## 🎨 UI Implementation Details
 
-### Portal Support
-The autosuggest component was designed with portal support to bypass CSS conflicts:
+### Current Positioning Strategy (No Portals)
+
+The autosuggest component uses **absolute positioning** within the input container, not portals:
 
 ```typescript
-// Portal implementation (currently not used due to CSS conflicts)
-import { createPortal } from "react-dom";
-
-// Render autosuggest directly to document.body
-return createPortal(
-  <div className="fixed bottom-16 left-1/2 transform -translate-x-1/2 z-[9999]">
-    {/* Autosuggest content */}
-  </div>,
-  document.body
-);
-```
-
-**Note**: Portal implementation was attempted but reverted due to aggressive CSS rules in `globals.css` that override positioning. Current implementation uses absolute positioning within the input container.
-
-### Positioning Strategy
-```typescript
-// Current positioning in multimodal-input.tsx
+// Current implementation in multimodal-input.tsx
 <Autosuggest
+  suggestions={suggestions}
+  isLoading={isAutosuggestLoading}
+  error={autosuggestError}
+  selectedIndex={selectedIndex}
+  isVisible={isAutosuggestVisible}
+  onSelect={(suggestion) => {
+    setInput(suggestion.text);
+    handleAutosuggestClear();
+  }}
+  onNavigateUp={navigateUp}
+  onNavigateDown={navigateDown}
   className="absolute bottom-16 left-0 right-0 z-[9999]"
-  // ... other props
 />
 ```
 
+### Autosuggest Component Styling
+
+The component uses inline styles for reliable positioning:
+
+```typescript
+// In autosuggest.tsx
+<div
+  ref={ref}
+  className="absolute bottom-full left-0 right-0 mb-2 z-[9999]"
+  style={{
+    backgroundColor: 'white',
+    border: '2px solid #e5e7eb',
+    borderRadius: '8px',
+    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+    minHeight: '120px',
+    width: '100%',
+    display: 'block',
+    visibility: 'visible',
+    opacity: '1',
+    zIndex: 9999,
+  }}
+>
+```
+
+### Positioning Details
 - **`bottom-16`**: Positions suggestions 64px from bottom of container
 - **`left-0 right-0`**: Full width of container
 - **`z-[9999]`**: High z-index to appear above other elements
+- **Inline styles**: Ensures visibility with `!important`-like specificity
+
+### Keyboard Navigation Implementation
+
+The autosuggest integrates seamlessly with the main input's keyboard handling:
+
+```typescript
+// In multimodal-input.tsx - handleKeyDown function
+const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  // Handle autosuggest navigation
+  if (isAutosuggestVisible && suggestions.length > 0) {
+    switch (event.key) {
+      case "ArrowUp":
+        event.preventDefault();
+        navigateUp();
+        return;
+      case "ArrowDown":
+        event.preventDefault();
+        navigateDown();
+        return;
+      case "Enter":
+        if (!event.shiftKey) {
+          const acceptedSuggestion = acceptSuggestion();
+          if (acceptedSuggestion) {
+            event.preventDefault();
+            setInput(acceptedSuggestion);
+            handleAutosuggestClear();
+            return;
+          }
+        }
+        break;
+      case "Escape":
+        event.preventDefault();
+        handleAutosuggestClear();
+        return;
+      case "Tab":
+        const acceptedSuggestion = acceptSuggestion();
+        if (acceptedSuggestion) {
+          event.preventDefault();
+          setInput(acceptedSuggestion);
+          handleAutosuggestClear();
+          return;
+        }
+        break;
+    }
+  }
+  // ... rest of keyboard handling
+};
+```
 
 ### Visual Feedback System
 ```typescript
-// Enhanced visual feedback for keyboard navigation
+// Enhanced visual feedback for keyboard navigation in autosuggest.tsx
 const getSelectionStyles = (isSelected: boolean) => ({
   backgroundColor: isSelected ? '#dbeafe' : 'white', // blue-100 : white
   color: isSelected ? '#1e3a8a' : '#111827', // blue-900 : gray-900
