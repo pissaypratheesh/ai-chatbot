@@ -47,13 +47,6 @@ export function SidebarWithSearch({ user, minChars = 2 }: SidebarWithSearchProps
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/celebrity-chat">
-                  ⭐ Celebrity Chat
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>

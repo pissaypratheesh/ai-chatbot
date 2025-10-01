@@ -22,6 +22,7 @@ import { entitlementsByUserType } from "@/lib/ai/entitlements";
 import type { ChatModel } from "@/lib/ai/models";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { myProvider } from "@/lib/ai/providers";
+import { generateCelebritySystemPrompt, getCelebrityPersonaById } from "@/lib/celebrity-personas";
 import { createDocument } from "@/lib/ai/tools/create-document";
 import { getWeather } from "@/lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
@@ -175,9 +176,18 @@ export async function POST(request: Request) {
 
     const stream = createUIMessageStream({
       execute: ({ writer: dataStream }) => {
+        // Determine system prompt based on celebrity persona
+        let systemPromptText: string;
+        if (selectedCelebrityPersona && selectedCelebrityPersona !== "ai-default") {
+          const persona = getCelebrityPersonaById(selectedCelebrityPersona);
+          systemPromptText = persona ? generateCelebritySystemPrompt(persona) : systemPrompt({ selectedChatModel, requestHints });
+        } else {
+          systemPromptText = systemPrompt({ selectedChatModel, requestHints });
+        }
+
         const result = streamText({
           model: myProvider.languageModel(selectedChatModel),
-          system: systemPrompt({ selectedChatModel, requestHints }),
+          system: systemPromptText,
           messages: convertToModelMessages(uiMessages),
           stopWhen: stepCountIs(5),
           experimental_activeTools:

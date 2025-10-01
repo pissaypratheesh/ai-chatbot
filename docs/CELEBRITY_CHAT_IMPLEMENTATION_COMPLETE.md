@@ -2,7 +2,7 @@
 
 ## 🎯 Overview
 
-This document describes the **complete implementation** of the celebrity chat feature for the AI chatbot. Users can now chat with different celebrity personas, each with unique personalities, speaking styles, and expertise areas. The implementation maintains the existing chat interface's look and feel while adding celebrity persona functionality.
+This document describes the **complete implementation** of the celebrity chat feature for the AI chatbot. Users can now chat with different celebrity personas, each with unique personalities, speaking styles, and expertise areas. The implementation has been **consolidated into the main chat interface** for a unified user experience.
 
 ## ✅ What's Implemented
 
@@ -16,13 +16,14 @@ This document describes the **complete implementation** of the celebrity chat fe
 - **Authentication**: Full authentication and authorization support
 
 ### Key Features
-- ✅ **8 Celebrity Personas**: Elon Musk, Oprah Winfrey, Steve Jobs, Marie Curie, Leonardo da Vinci, Albert Einstein, Frida Kahlo, Nelson Mandela
+- ✅ **9 Celebrity Personas**: AI Default, Elon Musk, Oprah Winfrey, Steve Jobs, Marie Curie, Leonardo da Vinci, Albert Einstein, Frida Kahlo, Nelson Mandela
 - ✅ **Authentic Responses**: Each persona responds in their unique style and expertise
-- ✅ **Seamless Integration**: Uses existing chat components and utilities
-- ✅ **Route Separation**: `/celebrity-chat` route doesn't impact existing `/chat` functionality
+- ✅ **Unified Interface**: Celebrity personas integrated into main chat interface
+- ✅ **Persona Selector**: Dropdown in main chat toolbar for easy persona switching
+- ✅ **AI Default**: Standard AI assistant behavior as default option
 - ✅ **Type Safety**: Full TypeScript support with proper error handling
 - ✅ **Build Success**: Project builds without errors
-- ✅ **API Endpoints**: Complete API implementation for celebrity chat functionality
+- ✅ **API Integration**: Celebrity personas work through main chat API
 
 ## 🏗️ Technical Architecture
 
@@ -30,18 +31,18 @@ This document describes the **complete implementation** of the celebrity chat fe
 ```mermaid
 graph TD
     A[AppSidebar] --> B[SidebarWithSearch]
-    B --> C[Celebrity Chat Link]
-    C --> D[CelebrityChat Component]
-    D --> E[CelebrityPersonaSelector]
+    B --> C[Main Chat Link]
+    C --> D[Chat Component]
+    D --> E[PersonaSelectorCompact]
     D --> F[Messages Component]
     D --> G[MultimodalInput]
     
     E --> H[Persona Dropdown]
     H --> I[Persona Selection]
-    I --> J[Cookie Storage]
+    I --> J[State Management]
     
     D --> K[useChat Hook]
-    K --> L[Celebrity API Route]
+    K --> L[Main Chat API Route]
     L --> M[AI Provider]
     M --> N[Celebrity System Prompt]
     

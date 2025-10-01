@@ -31,7 +31,8 @@ import { Messages } from "./messages";
 import { MultimodalInput } from "./multimodal-input";
 import { getChatHistoryPaginationKey } from "./sidebar-history";
 import { toast } from "./toast";
-import type { VisibilityType } from "./visibility-selector";
+import { DEFAULT_CELEBRITY_PERSONA } from "@/lib/celebrity-personas";
+import type { CelebrityPersona } from "@/lib/celebrity-personas";
 import { QuoteProvider } from "./providers/QuoteProvider";
 
 export function Chat({
@@ -63,6 +64,7 @@ export function Chat({
   const [usage, setUsage] = useState<AppUsage | undefined>(initialLastContext);
   const [showCreditCardAlert, setShowCreditCardAlert] = useState(false);
   const [currentModelId, setCurrentModelId] = useState(initialChatModel);
+  const [selectedPersona, setSelectedPersona] = useState<CelebrityPersona>(DEFAULT_CELEBRITY_PERSONA);
   const currentModelIdRef = useRef(currentModelId);
 
   useEffect(() => {
@@ -92,6 +94,7 @@ export function Chat({
             message: request.messages.at(-1),
             selectedChatModel: currentModelIdRef.current,
             selectedVisibilityType: visibilityType,
+            selectedCelebrityPersona: selectedPersona.id,
             ...request.body,
           },
         };
@@ -184,7 +187,9 @@ export function Chat({
               input={input}
               messages={messages}
               onModelChange={setCurrentModelId}
+              onPersonaChange={setSelectedPersona}
               selectedModelId={currentModelId}
+              selectedPersona={selectedPersona}
               selectedVisibilityType={visibilityType}
               sendMessage={sendMessage}
               setAttachments={setAttachments}

@@ -10,6 +10,15 @@ export type CelebrityPersona = {
 
 export const celebrityPersonas: CelebrityPersona[] = [
   {
+    id: "ai-default",
+    name: "AI Default",
+    description: "Standard AI assistant",
+    personality: "Helpful, knowledgeable, objective, and professional",
+    speakingStyle: "Clear, informative, and balanced in tone",
+    background: "A general-purpose AI assistant designed to be helpful, harmless, and honest",
+    avatar: "🤖"
+  },
+  {
     id: "elon-musk",
     name: "Elon Musk",
     description: "Tech entrepreneur and CEO",
@@ -83,13 +92,18 @@ export const celebrityPersonas: CelebrityPersona[] = [
   }
 ];
 
-export const DEFAULT_CELEBRITY_PERSONA = celebrityPersonas[0];
+export const DEFAULT_CELEBRITY_PERSONA = celebrityPersonas[0]; // AI Default
 
 export function getCelebrityPersonaById(id: string): CelebrityPersona | undefined {
   return celebrityPersonas.find(persona => persona.id === id);
 }
 
 export function generateCelebritySystemPrompt(persona: CelebrityPersona): string {
+  // For AI Default, use the standard system prompt
+  if (persona.id === "ai-default") {
+    return `You are a helpful AI assistant. Be informative, accurate, and helpful in your responses.`;
+  }
+
   return `You are ${persona.name}, ${persona.description}.
 
 PERSONALITY: ${persona.personality}

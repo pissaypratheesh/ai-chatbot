@@ -46,11 +46,67 @@ import {
 import { PreviewAttachment } from "./preview-attachment";
 import { SuggestedActions } from "./suggested-actions";
 import { Button } from "./ui/button";
-import type { VisibilityType } from "./visibility-selector";
-import { useQuote } from "./providers/QuoteProvider";
+import { celebrityPersonas, getCelebrityPersonaById, type CelebrityPersona } from "@/lib/celebrity-personas";
 import { CrossSmallIcon } from "./icons";
 import { useAutosuggest } from "@/hooks/useAutosuggest";
 import { Autosuggest } from "./autosuggest";
+import type { VisibilityType } from "./visibility-selector";
+import { useQuote } from "./providers/QuoteProvider";
+
+function PersonaSelectorCompact({
+  selectedPersona,
+  onPersonaChange,
+}: {
+  selectedPersona: CelebrityPersona;
+  onPersonaChange?: (persona: CelebrityPersona) => void;
+}) {
+  const [optimisticPersona, setOptimisticPersona] = useState(selectedPersona);
+
+  useEffect(() => {
+    setOptimisticPersona(selectedPersona);
+  }, [selectedPersona]);
+
+  return (
+    <PromptInputModelSelect
+      onValueChange={(personaName) => {
+        const persona = celebrityPersonas.find((p) => p.name === personaName);
+        if (persona) {
+          setOptimisticPersona(persona);
+          onPersonaChange?.(persona);
+        }
+      }}
+      value={optimisticPersona?.name}
+    >
+      <Trigger
+        className="flex h-8 items-center gap-2 rounded-lg border-0 bg-background px-2 text-foreground shadow-none transition-colors hover:bg-accent focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+        type="button"
+      >
+        <span className="text-sm">{optimisticPersona?.avatar}</span>
+        <span className="hidden font-medium text-xs sm:block">
+          {optimisticPersona?.name}
+        </span>
+        <ChevronDownIcon size={16} />
+      </Trigger>
+      <PromptInputModelSelectContent className="min-w-[260px] p-0">
+        <div className="flex flex-col gap-px">
+          {celebrityPersonas.map((persona) => (
+            <SelectItem key={persona.id} value={persona.name}>
+              <div className="flex items-center gap-2">
+                <span className="text-sm">{persona.avatar}</span>
+                <div>
+                  <div className="truncate font-medium text-xs">{persona.name}</div>
+                  <div className="mt-px truncate text-[10px] text-muted-foreground leading-tight">
+                    {persona.description}
+                  </div>
+                </div>
+              </div>
+            </SelectItem>
+          ))}
+        </div>
+      </PromptInputModelSelectContent>
+    </PromptInputModelSelect>
+  );
+}
 
 function PureMultimodalInput({
   chatId,
@@ -67,6 +123,8 @@ function PureMultimodalInput({
   selectedVisibilityType,
   selectedModelId,
   onModelChange,
+  selectedPersona,
+  onPersonaChange,
   usage,
 }: {
   chatId: string;
@@ -83,6 +141,8 @@ function PureMultimodalInput({
   selectedVisibilityType: VisibilityType;
   selectedModelId: string;
   onModelChange?: (modelId: string) => void;
+  selectedPersona: CelebrityPersona;
+  onPersonaChange?: (persona: CelebrityPersona) => void;
   usage?: AppUsage;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -427,6 +487,10 @@ function PureMultimodalInput({
               onModelChange={onModelChange}
               selectedModelId={selectedModelId}
             />
+            <PersonaSelectorCompact
+              onPersonaChange={onPersonaChange}
+              selectedPersona={selectedPersona}
+            />
           </PromptInputTools>
 
           {status === "submitted" ? (
@@ -478,6 +542,9 @@ export const MultimodalInput = memo(
       return false;
     }
     if (prevProps.selectedModelId !== nextProps.selectedModelId) {
+      return false;
+    }
+    if (prevProps.selectedPersona.id !== nextProps.selectedPersona.id) {
       return false;
     }
 
