@@ -94,6 +94,9 @@ export function getTrailingMessageId({
 }
 
 export function sanitizeText(text: string) {
+  if (typeof text !== "string") {
+    return String(text || "");
+  }
   return text.replace('<has_function_call>', '');
 }
 

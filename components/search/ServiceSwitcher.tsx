@@ -52,7 +52,7 @@ export function ServiceSwitcher() {
   };
 
   return (
-    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
       <h3 className="text-sm font-medium text-gray-900 mb-3">
         🔄 Search Service Switcher
       </h3>

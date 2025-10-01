@@ -28,7 +28,7 @@ export function SidebarWithSearch({ user, minChars = 2 }: SidebarWithSearchProps
   return (
     <>
       {/* Service Switcher */}
-      <SidebarGroup>
+      <SidebarGroup className="mt-1 mb-0">
         <SidebarGroupContent>
           <div className="px-2 py-2">
             <ServiceSwitcher />
@@ -37,13 +37,20 @@ export function SidebarWithSearch({ user, minChars = 2 }: SidebarWithSearchProps
       </SidebarGroup>
 
       {/* Games Section */}
-      <SidebarGroup>
+      <SidebarGroup className="my-1">
         <SidebarGroupContent>
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <Link href="/tic-tac-toe">
+                <Link href="/tic-tac-toe" target="_blank" rel="noopener">
                   🎮 Tic Tac Toe
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/celebrity-chat">
+                  ⭐ Celebrity Chat
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
