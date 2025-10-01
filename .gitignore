@@ -47,3 +47,4 @@ postgres_data/
 *.db
 *.sqlite
 *.sqlite3
+postgres.log

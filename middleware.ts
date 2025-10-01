@@ -25,6 +25,7 @@ export async function middleware(request: NextRequest) {
       pathname.startsWith("/api/history") ||
       pathname.startsWith("/api/debug-session") ||
       pathname.startsWith("/api/autosuggest") ||
+      pathname.startsWith("/api/tic-tac-toe") ||
       pathname === "/db-viewer.html" ||
       pathname === "/db-viewer") {
     return NextResponse.next();
@@ -43,6 +44,11 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(
         new URL(`/api/auth/guest?redirectUrl=${redirectUrl}`, request.url)
       );
+    }
+    
+    // Allow tic-tac-toe game page without authentication
+    if (pathname === "/tic-tac-toe") {
+      return NextResponse.next();
     }
     
     const redirectUrl = encodeURIComponent(request.url);

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { User } from "next-auth";
 import { SearchBar } from "@/components/search/SearchBar";
@@ -7,7 +8,7 @@ import { SearchResults } from "@/components/search/SearchResults";
 import { ServiceSwitcher } from "@/components/search/ServiceSwitcher";
 import { SidebarHistory } from "@/components/sidebar-history";
 import { useSearch } from "@/hooks/useSearch";
-import { SidebarGroup, SidebarGroupContent } from "@/components/ui/sidebar";
+import { SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 
 interface SidebarWithSearchProps {
   user: User | undefined;
@@ -32,6 +33,21 @@ export function SidebarWithSearch({ user, minChars = 2 }: SidebarWithSearchProps
           <div className="px-2 py-2">
             <ServiceSwitcher />
           </div>
+        </SidebarGroupContent>
+      </SidebarGroup>
+
+      {/* Games Section */}
+      <SidebarGroup>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/tic-tac-toe">
+                  🎮 Tic Tac Toe
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
 

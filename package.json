@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbo",
-    "dev:full": "POSTGRES_URL=\"postgresql://postgres:postgres@localhost:5432/postgres\" next dev --turbo",
+    "dev:full": "chmod +x scripts/start-postgres.sh && ./scripts/start-postgres.sh && POSTGRES_URL=\"postgresql://postgres:postgres@localhost:5432/postgres\" next dev --turbo",
     "dev:with-db": "POSTGRES_URL=\"postgresql://postgres:postgres@localhost:5432/postgres\" next dev --turbo",
     "dev:neon": "echo 'Using Neon database from .env.local' && next dev --turbo",
     "build": "tsx lib/db/migrate && next build",
