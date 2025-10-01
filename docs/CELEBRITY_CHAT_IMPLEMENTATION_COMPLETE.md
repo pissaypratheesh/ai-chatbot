@@ -7,12 +7,12 @@ This document describes the **complete implementation** of the celebrity chat fe
 ## ✅ What's Implemented
 
 ### Core Functionality
-- **Celebrity Persona System**: 8 diverse celebrity personas with unique personalities
+- **Celebrity Persona System**: 9 diverse celebrity personas with unique personalities (including AI Default)
 - **Dynamic AI Prompting**: Each persona has custom system prompts for authentic responses
-- **Persona Selection**: Dropdown selector to switch between celebrities
-- **Persistent Selection**: Selected persona is saved in cookies for session continuity
-- **Full Chat Integration**: Complete chat functionality with celebrity context
-- **Database Integration**: Celebrity chats are saved to PostgreSQL database
+- **Persona Selection**: Compact dropdown selector integrated into main chat input
+- **State Management**: Fixed stale closure issues with persona selection using refs
+- **Full Chat Integration**: Complete chat functionality with celebrity context in main interface
+- **Database Integration**: Celebrity chats saved to PostgreSQL database through main API
 - **Authentication**: Full authentication and authorization support
 
 ### Key Features
@@ -92,14 +92,16 @@ lib/
 components/
 ├── chat.tsx                           ✅ Added persona state management with refs
 ├── multimodal-input.tsx               ✅ Added PersonaSelectorCompact component
+├── artifact.tsx                       ✅ Added selectedPersona prop support
 └── sidebar-with-search.tsx            ✅ Removed separate celebrity chat link
 
 app/(chat)/api/chat/
 ├── route.ts                           ✅ Added persona handling to main API
 └── schema.ts                          ✅ Added selectedCelebrityPersona field
 
-lib/ai/
-└── entitlements.ts                    ✅ Increased rate limits for testing
+lib/
+├── celebrity-personas.ts              ✅ Added AI Default persona
+└── ai/entitlements.ts                 ✅ Increased rate limits for testing
 ```
 
 ## 🔧 Implementation Details
@@ -490,19 +492,18 @@ node -e "const { generateCelebritySystemPrompt, getCelebrityPersonaById } = requ
 
 ### Basic Usage
 ```typescript
-// Navigate to celebrity chat
-window.location.href = '/celebrity-chat';
+// Navigate to main chat (no separate celebrity route needed)
+window.location.href = '/chat';
 
-// Select a persona programmatically
+// Select a persona programmatically in the main chat
 const personaId = 'elon-musk';
-setCurrentCelebrityPersona(personaId);
-saveCelebrityPersonaAsCookie(personaId);
+setSelectedPersona(getCelebrityPersonaById(personaId));
 ```
 
 ### API Usage
 ```typescript
-// Send message to celebrity chat
-const response = await fetch('/api/celebrity-chat/chat', {
+// Send message to main chat API with persona
+const response = await fetch('/api/chat', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
